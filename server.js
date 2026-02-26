@@ -11,28 +11,32 @@ const port = Number(process.env.PORT) || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Route بسيط
+
+//route
+app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
+
+
+//test
+
 app.get("/test", (req, res) => res.send("hello world"));
 
-// ✅ اختبار اتصال ORM (Sequelize)
 sequelize
   .authenticate()
   .then(() => console.log("✅ Sequelize Connected"))
   .catch((err) => console.error("❌ Sequelize Error:", err));
 
-// ✅ اختبار اتصال Raw SQL (mysql2)
+
 mySqlPool
   .query("SELECT 1")
   .then(() => console.log("✅ Raw MySQL Connected"))
   .catch((err) => console.error("❌ Raw MySQL Error:", err));
 
-// ✅ مثال Raw SQL endpoint
+
 app.get("/time-raw", async (req, res) => {
   const [rows] = await mySqlPool.query("SELECT NOW() AS now_time");
   res.json(rows[0]);
 });
 
-// ✅ مثال ORM endpoint (Sequelize query)
 app.get("/time-orm", async (req, res) => {
   const [rows] = await sequelize.query("SELECT NOW() AS now_time");
   res.json(rows[0]);
@@ -41,3 +45,5 @@ app.get("/time-orm", async (req, res) => {
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
 });
+
+
