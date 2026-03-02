@@ -15,7 +15,6 @@ app.use(express.urlencoded({ extended: true }));
 //route
 app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
 
-
 //test
 
 app.get("/test", (req, res) => res.send("hello world"));
