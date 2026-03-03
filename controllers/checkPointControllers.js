@@ -227,10 +227,71 @@ if(!updated){
 
 }
 
-const updateCheckpointStatus = async(req, res) => {
+const updateCheckpointStatus = async (req, res) => {
+  try {
+    const checkpointId = Number(req.params.id);
+    const { current_status } = req.body;
+
+   
+    if (!Number.isInteger(checkpointId) || checkpointId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkpoint ID",
+        error: "Bad Request",
+      });
+    }
 
 
-}
+    if (!current_status) {
+      return res.status(400).json({
+        success: false,
+        message: "current_status is required",
+        error: "Bad Request",
+      });
+    }
+
+
+    const allowedStatuses = ["OPEN", "DELAY", "CLOSED"];
+    if (!allowedStatuses.includes(String(current_status).toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkpoint status",
+        error: "Bad Request",
+      });
+    }
+
+    const checkpoint = await Checkpoint.findByPk(checkpointId);
+    if (!checkpoint) {
+      return res.status(404).json({
+        success: false,
+        message: "Checkpoint not found",
+        error: "Not Found",
+      });
+    }
+
+  
+    await Checkpoint.update(
+      { current_status: String(current_status).toUpperCase() },
+      { where: { checkpoint_id: checkpointId } }
+    );
+
+    const updated = await Checkpoint.findByPk(checkpointId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Checkpoint status updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Error updating checkpoint status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update checkpoint status",
+      error: "Internal Server Error",
+    });
+  }
+};
+
 
 
 
