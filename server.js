@@ -11,6 +11,8 @@ const port = Number(process.env.PORT) || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const applyAssociations = require("./models/associations");
+applyAssociations();
 
 //route
 app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
