@@ -2,7 +2,7 @@
 
 const db=require("../config/db.js");
 
-const { Checkpoint } = require("../models");
+const {  sequelize,Checkpoint } = require("../models");
 
 
 
@@ -228,12 +228,14 @@ if(!updated){
 }
 
 const updateCheckpointStatus = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
     const checkpointId = Number(req.params.id);
     const { current_status } = req.body;
 
-   
     if (!Number.isInteger(checkpointId) || checkpointId <= 0) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: "Invalid checkpoint ID",
@@ -241,8 +243,8 @@ const updateCheckpointStatus = async (req, res) => {
       });
     }
 
-
     if (!current_status) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: "current_status is required",
@@ -250,9 +252,11 @@ const updateCheckpointStatus = async (req, res) => {
       });
     }
 
-
     const allowedStatuses = ["OPEN", "DELAY", "CLOSED"];
-    if (!allowedStatuses.includes(String(current_status).toUpperCase())) {
+    const newStatus = String(current_status).toUpperCase();
+
+    if (!allowedStatuses.includes(newStatus)) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: "Invalid checkpoint status",
@@ -260,8 +264,9 @@ const updateCheckpointStatus = async (req, res) => {
       });
     }
 
-    const checkpoint = await Checkpoint.findByPk(checkpointId);
+    const checkpoint = await Checkpoint.findByPk(checkpointId, { transaction: t });
     if (!checkpoint) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Checkpoint not found",
@@ -269,28 +274,132 @@ const updateCheckpointStatus = async (req, res) => {
       });
     }
 
-  
+    const oldStatus = String(checkpoint.current_status || "").toUpperCase();
+
+ 
+    if (oldStatus === newStatus) {
+      await t.rollback();
+      return res.status(200).json({
+        success: true,
+        message: "Status is already set to this value",
+        data: checkpoint,
+      });
+    }
+
     await Checkpoint.update(
-      { current_status: String(current_status).toUpperCase() },
-      { where: { checkpoint_id: checkpointId } }
+      { current_status: newStatus },
+      { where: { checkpoint_id: checkpointId }, transaction: t }
     );
 
-    const updated = await Checkpoint.findByPk(checkpointId);
+ 
+    await sequelize.query(
+      `
+      UPDATE checkpoint_status_history
+      SET end_time = NOW()
+      WHERE checkpoint_id = ?
+        AND end_time IS NULL
+      `,
+      {
+        replacements: [checkpointId],
+        transaction: t,
+      }
+    );
 
+    await sequelize.query(
+      `
+      INSERT INTO checkpoint_status_history (checkpoint_id, start_time, end_time, status)
+      VALUES (?, NOW(), NULL, ?)
+      `,
+      {
+        replacements: [checkpointId, newStatus],
+        transaction: t,
+      }
+    );
+
+   
+    await t.commit();
+
+   
+    const updated = await Checkpoint.findByPk(checkpointId);
     return res.status(200).json({
       success: true,
       message: "Checkpoint status updated successfully",
       data: updated,
     });
   } catch (error) {
+    await t.rollback();
     console.error("Error updating checkpoint status:", error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to update checkpoint status",
       error: "Internal Server Error",
     });
   }
-};
+}
+
+
+const createCheckpoint = async (req, res) => {
+  try {
+
+    const { checkpoint_name, current_status, lat, lng } = req.body;
+
+    if (!checkpoint_name || !current_status || !lat || !lng) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkpoint data",
+        error: "Bad Request"
+      });
+    }
+
+    const allowedStatuses = ["OPEN", "DELAY", "CLOSED"];
+    const status = String(current_status).toUpperCase();
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkpoint status",
+        error: "Bad Request"
+      });
+    }
+
+    const checkpoint = await Checkpoint.create({
+      checkpoint_name,
+      current_status: status,
+      lat,
+      lng, 
+      created_at: new Date(),
+      updated_at: null,
+    });
+
+    await db.query(
+      `
+      INSERT INTO checkpoint_status_history
+      (checkpoint_id, start_time, end_time, status)
+      VALUES (?, NOW(), NULL, ?)
+      `,
+      [checkpoint.checkpoint_id, status]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Checkpoint created successfully",
+      data: checkpoint
+    });
+
+  } catch (error) {
+
+    console.error("Error creating checkpoint:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create checkpoint",
+      error: "Internal Server Error"
+    });
+  }
+}
+
+
 
 
 
@@ -300,5 +409,6 @@ module.exports = {
   getCheckPoints,
   getCheckpointById,
   updateCheckpoint,
-  updateCheckpointStatus
+  updateCheckpointStatus,
+  createCheckpoint
 };

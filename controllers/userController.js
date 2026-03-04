@@ -20,7 +20,7 @@ const signupUser = async (req, res) => {
       });
     }
 
-    // check email/phone uniqueness
+ 
     const [exists] = await db.query(
       "SELECT user_id FROM users WHERE email = ? OR phone_number = ?",
       [email, finalPhone]
@@ -33,13 +33,13 @@ const signupUser = async (req, res) => {
       });
     }
 
-    // hash password
+
     const password_hash = await bcrypt.hash(password, 10);
 
-    // default role_id (عدّليه حسب جدول roles عندك)
+
     const finalRoleId = role_id ?? 3;
 
-    // insert (مهم: users + phone_number + role_id)
+   
     const [result] = await db.query(
       "INSERT INTO users (name, email, password, phone_number, role_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
       [name, email, password_hash, finalPhone, finalRoleId]
