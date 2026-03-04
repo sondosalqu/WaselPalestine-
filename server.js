@@ -11,13 +11,13 @@ const port = Number(process.env.PORT) || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const applyAssociations = require("./models/associations");
-applyAssociations();
 
 //route
 app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
 
 app.use("/api/v1/users", require("./routes/userRout"));
+
+app.use("/api/v1/reports", require("./routes/reports.routes"));
 //test
 
 app.get("/test", (req, res) => res.send("hello world"));
