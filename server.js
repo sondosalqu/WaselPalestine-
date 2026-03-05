@@ -16,6 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
 
 app.use("/api/v1/users", require("./routes/userRout"));
+
+app.use("/api/v1/reports", require("./routes/reports.routes"));
 //test
 
 app.get("/test", (req, res) => res.send("hello world"));
