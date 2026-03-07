@@ -40,4 +40,38 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+
+
+
+
+
+
+
+
+
+
+
+if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
+  db.RouteRequest.hasMany(db.RouteRequestConstraint, {
+    foreignKey: "route_req_id",
+    as: "constraints",
+  });
+
+  db.RouteRequestConstraint.belongsTo(db.RouteConstraintType, {
+    foreignKey: "constraint_type_id",
+    as: "type",
+  });
+
+  db.RouteRequest.hasMany(db.RouteResult, {
+    foreignKey: "route_req_id",
+    as: "results",
+  });
+
+  db.RouteResult.belongsTo(db.RouteRequest, {
+    foreignKey: "route_req_id",
+    as: "request",
+  });
+}
+
+
 module.exports = db;
