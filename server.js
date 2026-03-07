@@ -20,7 +20,10 @@ app.use("/api/v1/users", require("./routes/userRout"));
 
 app.use("/api/v1/routes", require("./routes/routeEstimationRoute"));
 
-//test
+
+app.use("/api/v1/reports", require("./routes/reports.routes"));
+
+
 
 app.get("/test", (req, res) => res.send("hello world"));
 
