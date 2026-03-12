@@ -99,6 +99,7 @@ if (db.User && db.ModerationAction) {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+<<<<<<< HEAD
 if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
   db.RouteRequest.hasMany(db.RouteRequestConstraint, {
     foreignKey: "route_req_id",
@@ -125,5 +126,30 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 
+=======
+
+db.Incident.belongsTo(db.IncidentType, {
+  foreignKey: "type_id",
+  as: "type",
+});
+
+db.IncidentType.hasMany(db.Incident, {
+  foreignKey: "type_id",
+  as: "incidents",
+});
+
+
+db.Incident.belongsTo(db.Checkpoint, {
+  foreignKey: "checkpoint_id",
+  as: "checkpoint",
+});
+
+
+db.Incident.belongsTo(db.User, {
+  foreignKey: "created_by",
+  as: "creator",
+});
+
+>>>>>>> e230d9f (feat: add checkpoint and incident endpoints, update incident model, and enhance signin validation)
 module.exports = db;
 
