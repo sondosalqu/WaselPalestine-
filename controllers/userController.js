@@ -57,7 +57,7 @@ const signupUser = async (req, res) => {
 
     const finalRoleId = role_id ?? 3;
 
-    // role_id validity check
+  
     const [roleCheck] = await db.query(
       "SELECT role_id FROM roles WHERE role_id = ?",
       [finalRoleId]
