@@ -40,4 +40,27 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+
+db.Incident.belongsTo(db.IncidentType, {
+  foreignKey: "type_id",
+  as: "type",
+});
+
+db.IncidentType.hasMany(db.Incident, {
+  foreignKey: "type_id",
+  as: "incidents",
+});
+
+
+db.Incident.belongsTo(db.Checkpoint, {
+  foreignKey: "checkpoint_id",
+  as: "checkpoint",
+});
+
+
+db.Incident.belongsTo(db.User, {
+  foreignKey: "created_by",
+  as: "creator",
+});
+
 module.exports = db;
