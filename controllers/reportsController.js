@@ -108,7 +108,7 @@ const getReports = async (req, res) => {
 
 // GET /api/v1/reports/:id
 const getReportById = async (req, res) => {
-   console.log("✅ getReportById hit:", req.params.id);
+  console.log("✅ getReportById hit:", req.params.id);
   try {
     const reportId = Number(req.params.id);
 
@@ -263,7 +263,6 @@ const createReport = async (req, res) => {
       }
     }
 
-    // exact same report spam prevention
     const recentDuplicate = await Report.findOne({
       where: {
         user_id: tokenUserId,
@@ -298,7 +297,6 @@ const createReport = async (req, res) => {
       report_lng: lng,
     });
 
-    // automatic duplicate detection
     const candidateReports = await Report.findAll({
       where: {
         category: category.trim(),
@@ -370,6 +368,7 @@ const createReport = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   getReports,
   getReportById,

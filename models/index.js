@@ -95,6 +95,28 @@ if (db.User && db.ModerationAction) {
   db.ModerationAction.belongsTo(db.User, { foreignKey: "performed_by" });
 }
 
+if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
+  db.RouteRequest.hasMany(db.RouteRequestConstraint, {
+    foreignKey: "route_req_id",
+    as: "constraints",
+  });
+
+  db.RouteRequestConstraint.belongsTo(db.RouteConstraintType, {
+    foreignKey: "constraint_type_id",
+    as: "type",
+  });
+
+  db.RouteRequest.hasMany(db.RouteResult, {
+    foreignKey: "route_req_id",
+    as: "results",
+  });
+
+  db.RouteResult.belongsTo(db.RouteRequest, {
+    foreignKey: "route_req_id",
+    as: "request",
+  });
+}
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

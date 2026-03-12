@@ -21,12 +21,10 @@ router.get("/test-id/:id", (req, res) => {
   });
 });
 
-
 // GET /api/v1/reports/:id
 router.get("/:id", getReportById);
 
 // POST /api/v1/reports
 router.post("/", requireAuth, createReport);
 
-//console.log("✅ reports.routes.js loaded");
 module.exports = router;
