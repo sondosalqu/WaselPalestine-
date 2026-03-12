@@ -95,18 +95,6 @@ if (db.User && db.ModerationAction) {
   db.ModerationAction.belongsTo(db.User, { foreignKey: "performed_by" });
 }
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-
-
-
-
-
-
-
-
-
 if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
   db.RouteRequest.hasMany(db.RouteRequestConstraint, {
     foreignKey: "route_req_id",
@@ -129,6 +117,7 @@ if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db
   });
 }
 
-
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 
 module.exports = db;
