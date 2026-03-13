@@ -19,7 +19,8 @@ app.use("/api/v1/reports", require("./routes/reportVote.routes"));
 
 app.use("/api/v1", require("./routes/moderation.routes"));
 
-// test
+
+
 app.get("/test", (req, res) => res.send("hello world"));
 
 sequelize
