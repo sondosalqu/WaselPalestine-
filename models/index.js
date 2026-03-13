@@ -102,16 +102,6 @@ db.Sequelize = Sequelize;
 
 
 
-
-
-
-
-
-<<<<<<< HEAD
-
-
-=======
->>>>>>> main
 if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
   db.RouteRequest.hasMany(db.RouteRequestConstraint, {
     foreignKey: "route_req_id",
