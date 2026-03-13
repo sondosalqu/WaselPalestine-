@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
+const fs = require("fs");
+const path = require("path");
+const Sequelize = require("sequelize");
+const process = require("process");
 
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
+const env = process.env.NODE_ENV || "development";
+const config = require(__dirname + "/../config/config.js")[env];
 
 const db = {};
 
@@ -15,46 +15,50 @@ let sequelize;
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+  sequelize = new Sequelize(
+    config.database,
+    config.username,
+    config.password,
+    config
+  );
 }
 
 fs
   .readdirSync(__dirname)
   .filter((file) => {
     return (
-      file.indexOf('.') !== 0 &&
+      file.indexOf(".") !== 0 &&
       file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
+      file.slice(-3) === ".js" &&
+      file.indexOf(".test.js") === -1
     );
   })
   .forEach((file) => {
     const moduleExport = require(path.join(__dirname, file));
 
-    // ✅ Support BOTH styles:
-    // 1) factory: module.exports = (sequelize, DataTypes) => Model
-    // 2) direct:  module.exports = Model
     const model =
-      typeof moduleExport === 'function'
+      typeof moduleExport === "function"
         ? moduleExport(sequelize, Sequelize.DataTypes)
         : moduleExport;
 
     if (!model || !model.name) {
-      console.warn(`[models/index] Skipped "${file}" because it did not export a Sequelize model.`);
+      console.warn(
+        `[models/index] Skipped "${file}" because it did not export a Sequelize model.`
+      );
       return;
     }
 
     db[model.name] = model;
   });
 
-// If any model defines associate(db)
+// associations defined inside model files
 Object.keys(db).forEach((modelName) => {
-  if (db[modelName] && typeof db[modelName].associate === 'function') {
+  if (db[modelName] && typeof db[modelName].associate === "function") {
     db[modelName].associate(db);
   }
 });
 
-// ✅ Manual associations (safe + won't break if some models missing)
+// Optional relations - only if models exist
 if (db.User && db.Report) {
   db.User.hasMany(db.Report, { foreignKey: "user_id" });
   db.Report.belongsTo(db.User, { foreignKey: "user_id" });
@@ -76,8 +80,12 @@ if (db.User && db.ReportVote) {
 }
 
 if (db.DuplicateReportGroup && db.DuplicateReportItem) {
-  db.DuplicateReportGroup.hasMany(db.DuplicateReportItem, { foreignKey: "group_id" });
-  db.DuplicateReportItem.belongsTo(db.DuplicateReportGroup, { foreignKey: "group_id" });
+  db.DuplicateReportGroup.hasMany(db.DuplicateReportItem, {
+    foreignKey: "group_id",
+  });
+  db.DuplicateReportItem.belongsTo(db.DuplicateReportGroup, {
+    foreignKey: "group_id",
+  });
 }
 
 if (db.Report && db.DuplicateReportItem) {
@@ -95,11 +103,12 @@ if (db.User && db.ModerationAction) {
   db.ModerationAction.belongsTo(db.User, { foreignKey: "performed_by" });
 }
 
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
+if (
+  db.RouteRequest &&
+  db.RouteRequestConstraint &&
+  db.RouteConstraintType &&
+  db.RouteResult
+) {
   db.RouteRequest.hasMany(db.RouteRequestConstraint, {
     foreignKey: "route_req_id",
     as: "constraints",
@@ -121,34 +130,34 @@ if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db
   });
 }
 
+if (db.Incident && db.IncidentType) {
+  db.Incident.belongsTo(db.IncidentType, {
+    foreignKey: "type_id",
+    as: "type",
+  });
+
+  db.IncidentType.hasMany(db.Incident, {
+    foreignKey: "type_id",
+    as: "incidents",
+  });
+}
+
+if (db.Incident && db.Checkpoint) {
+  db.Incident.belongsTo(db.Checkpoint, {
+    foreignKey: "checkpoint_id",
+    as: "checkpoint",
+  });
+}
+
+if (db.Incident && db.User) {
+  db.Incident.belongsTo(db.User, {
+    foreignKey: "created_by",
+    as: "creator",
+  });
+}
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-
-
-
-
-db.Incident.belongsTo(db.IncidentType, {
-  foreignKey: "type_id",
-  as: "type",
-});
-
-db.IncidentType.hasMany(db.Incident, {
-  foreignKey: "type_id",
-  as: "incidents",
-});
-
-
-db.Incident.belongsTo(db.Checkpoint, {
-  foreignKey: "checkpoint_id",
-  as: "checkpoint",
-});
-
-
-db.Incident.belongsTo(db.User, {
-  foreignKey: "created_by",
-  as: "creator",
-});
-
 
 module.exports = db;
 
