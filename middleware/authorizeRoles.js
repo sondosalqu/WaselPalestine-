@@ -1,24 +1,23 @@
-// middleware/authorizeRoles.js
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     try {
-      const userRole = req.user?.role;
+      const userRoleId = Number(req.user?.role);
 
-      if (!userRole) {
+      if (!Number.isInteger(userRoleId)) {
         return res.status(403).json({
           success: false,
           message: "User role not found in token",
         });
       }
 
-      if (!allowedRoles.includes(userRole)) {
+      if (!allowedRoles.includes(userRoleId)) {
         return res.status(403).json({
           success: false,
-          message: `Access denied for role: ${userRole}`,
+          message: `Access denied for role_id: ${userRoleId}`,
         });
       }
 
-      next(); 
+      next();
     } catch (error) {
       return res.status(500).json({
         success: false,

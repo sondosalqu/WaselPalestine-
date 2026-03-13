@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/sondosalqu/Business-Landing-Website_udacity#readme",
   "dependencies": {
+    "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "express": "^5.2.1",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "dotenv": "^17.3.1",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "sequelize-cli": "^6.6.5"
   }
 }
