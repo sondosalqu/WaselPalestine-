@@ -13,22 +13,13 @@ app.use(express.urlencoded({ extended: true }));
 // routes
 app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
 app.use("/api/v1/users", require("./routes/userRout"));
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
 app.use("/api/v1/routes", require("./routes/routeEstimationRoute"));
 app.use("/api/v1/reports", require("./routes/reports.routes"));
 app.use("/api/v1/reports", require("./routes/reportVote.routes"));
-
+app.use("/api/v1/incidents", require("./routes/incidentRout"));
 app.use("/api/v1", require("./routes/moderation.routes"));
 
-
-=======
->>>>>>> origin/main
-app.use("/api/v1/incidents", require("./routes/incidentRout"));
-//test
->>>>>>> e230d9f (feat: add checkpoint and incident endpoints, update incident model, and enhance signin validation)
-
+// test
 app.get("/test", (req, res) => res.send("hello world"));
 
 sequelize
