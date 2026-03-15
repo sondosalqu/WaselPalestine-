@@ -20,7 +20,6 @@ app.use("/api/v1", require("./routes/moderation.routes"));
 
 app.use("/api/v1/reports", require("./routes/reports.routes"));
 app.use("/api/v1/reports", require("./routes/reportVote.routes"));
-
 app.use("/api/v1/incidents", require("./routes/incidentRout"));
 
 app.get("/test", (req, res) => res.send("hello world"));

@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 
-
 const signupUser = async (req, res) => {
   try {
     
@@ -20,7 +19,26 @@ const signupUser = async (req, res) => {
       });
     }
 
-    // check email/phone uniqueness
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid email format",
+        error: "Bad Request"
+      });
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(finalPhone)) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid phone number format",
+        error: "Bad Request"
+      });
+    }
+
+ 
     const [exists] = await db.query(
       "SELECT user_id FROM users WHERE email = ? OR phone_number = ?",
       [email, finalPhone]
@@ -33,13 +51,27 @@ const signupUser = async (req, res) => {
       });
     }
 
-    // hash password
+
     const password_hash = await bcrypt.hash(password, 10);
 
-    // default role_id (عدّليه حسب جدول roles عندك)
+
     const finalRoleId = role_id ?? 3;
 
-    // insert (مهم: users + phone_number + role_id)
+  
+    const [roleCheck] = await db.query(
+      "SELECT role_id FROM roles WHERE role_id = ?",
+      [finalRoleId]
+    );
+
+    if (roleCheck.length === 0) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid role_id",
+        error: "Bad Request"
+      });
+    }
+
+   
     const [result] = await db.query(
       "INSERT INTO users (name, email, password, phone_number, role_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
       [name, email, password_hash, finalPhone, finalRoleId]
