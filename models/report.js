@@ -20,7 +20,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
 
-      // ✅ Geographic location (required by spec)
       report_lat: {
         type: DataTypes.DECIMAL(10, 7),
         allowNull: false,
@@ -44,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
       },
 
       status: {
-        type: DataTypes.ENUM("pending", "verified", "rejected", "closed"),
+        type: DataTypes.ENUM("pending", "verified", "rejected", "duplicate", "closed"),
         allowNull: false,
         defaultValue: "pending",
       },

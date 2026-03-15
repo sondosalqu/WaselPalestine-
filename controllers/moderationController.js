@@ -292,7 +292,7 @@ const markReportAsDuplicate = async (req, res) => {
       status: sourceReport.status,
     };
 
-    sourceReport.status = "rejected";
+    sourceReport.status = "duplicate";
     await sourceReport.save();
 
     await logModerationAction({
@@ -328,9 +328,73 @@ const markReportAsDuplicate = async (req, res) => {
   }
 };
 
+const getModerationActionsByReport = async (req, res) => {
+  try {
+    const reportId = Number(req.params.id);
+
+    if (!Number.isInteger(reportId) || reportId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid report id",
+        error: "Bad Request",
+      });
+    }
+
+    const report = await Report.findByPk(reportId);
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Report not found",
+        error: "Not Found",
+      });
+    }
+
+    const actions = await ModerationAction.findAll({
+      where: { report_id: reportId },
+      order: [["performed_time", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Moderation actions fetched successfully",
+      data: actions,
+    });
+  } catch (err) {
+    console.error("getModerationActionsByReport error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch moderation actions",
+      error: err.message,
+    });
+  }
+};
+const getPendingReports = async (req, res) => {
+  try {
+    const reports = await Report.findAll({
+      where: { status: "pending" },
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Pending reports fetched successfully",
+      data: reports,
+    });
+  } catch (err) {
+    console.error("getPendingReports error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch pending reports",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   verifyReport,
   rejectReport,
   closeReport,
   markReportAsDuplicate,
+  getModerationActionsByReport,
+  getPendingReports,
 };
