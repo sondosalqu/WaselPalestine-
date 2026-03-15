@@ -1,10 +1,6 @@
 require("dotenv").config();
 
-
-
 const express = require("express");
-
-
 const sequelize = require("./config/sequelize");
 const mySqlPool = require("./config/db");
 
@@ -22,20 +18,10 @@ app.use("/api/v1/routes", require("./routes/routeEstimationRoute"));
 // moderation BEFORE reports
 app.use("/api/v1", require("./routes/moderation.routes"));
 
-app.get("/debug-routes", (req, res) => {
-  res.json({ ok: true, message: "server.js route working" });
-});
-
 app.use("/api/v1/reports", require("./routes/reports.routes"));
 app.use("/api/v1/reports", require("./routes/reportVote.routes"));
 
-
-app.use("/api/v1", require("./routes/moderation.routes"));
-
-// test
-
 app.use("/api/v1/incidents", require("./routes/incidentRout"));
-
 
 app.get("/test", (req, res) => res.send("hello world"));
 
