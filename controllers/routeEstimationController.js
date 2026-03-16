@@ -1,25 +1,11 @@
 const db = require("../config/db.js");
 const { v4: uuidv4 } = require("uuid");
-
-function toNumberOrNull(value) {
-  if (value === undefined || value === null || value === "") return null;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function isValidLat(lat) {
-  return typeof lat === "number" && lat >= -90 && lat <= 90;
-}
-
-function isValidLng(lng) {
-  return typeof lng === "number" && lng >= -180 && lng <= 180;
-}
-
-function toPositiveIntOrNull(value) {
-  if (value === undefined || value === null || value === "") return null;
-  const n = Number(value);
-  return Number.isInteger(n) && n > 0 ? n : null;
-}
+const {
+  toNumberOrNull,
+  isValidLat,
+  isValidLng,
+  toPositiveIntOrNull,
+} = require("../utils/routeUtils");
 
 const createstimateRoute = async (req, res) => {
   try {
@@ -77,8 +63,7 @@ const createstimateRoute = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid coordinate range (lat: -90..90, lng: -180..180)",
+        message: "Invalid coordinate range (lat: -90..90, lng: -180..180)",
       });
     }
 

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { getCache, setCache } = require("../../utils/apiCache");
+const { getCache, setCache } = require("../../utils/routeUtils");
 
 const WEATHER_TTL_MS = 10 * 60 * 1000; 
 

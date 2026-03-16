@@ -3,6 +3,7 @@ const db=require("../config/db.js");
 
 const {  sequelize,Incident } = require("../models");
 
+const { triggerAlertsForVerifiedIncident } = require("../services/alertsService");
 
 
 const createIncident = async (req, res) => {
@@ -392,6 +393,9 @@ const verifyIncident = async (req, res) => {
       verified_by: req.user.user_id,
       verified_at: new Date(),
     });
+
+
+await triggerAlertsForVerifiedIncident(incidentId);
 
     return res.status(200).json({
       success: true,

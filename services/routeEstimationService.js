@@ -10,23 +10,9 @@ const { getRouteFromORS } = require("./external/openRouteService");
 const {
   getOpenWeather,
   getWeatherDurationMultiplier,
-} = require("./external/openWeatherService");require("./external/openWeatherService");
+} = require("./external/openWeatherService");
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (x) => (Number(x) * Math.PI) / 180;
-  const R = 6371;
-
-  const dLat = toRad(Number(lat2) - Number(lat1));
-  const dLon = toRad(Number(lon2) - Number(lon1));
-
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
-
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
+const { haversineKm } = require("../utils/routeUtils");
 
 async function calculateRouteForRequest(route_req_id, user_id) {
   if (!user_id) {
