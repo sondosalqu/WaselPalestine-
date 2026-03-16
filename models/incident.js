@@ -12,6 +12,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
       },
+      area_id: {
+  type: DataTypes.BIGINT.UNSIGNED,
+  allowNull: true,
+},
+
       severity: {
         type: DataTypes.STRING(30),
         allowNull: false,

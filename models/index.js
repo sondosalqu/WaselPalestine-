@@ -31,9 +31,6 @@ fs
   .forEach((file) => {
     const moduleExport = require(path.join(__dirname, file));
 
-    // ✅ Support BOTH styles:
-    // 1) factory: module.exports = (sequelize, DataTypes) => Model
-    // 2) direct:  module.exports = Model
     const model =
       typeof moduleExport === 'function'
         ? moduleExport(sequelize, Sequelize.DataTypes)
@@ -54,7 +51,9 @@ Object.keys(db).forEach((modelName) => {
   }
 });
 
-// ✅ Manual associations (safe + won't break if some models missing)
+// =========================
+// Existing associations
+// =========================
 if (db.User && db.Report) {
   db.User.hasMany(db.Report, { foreignKey: "user_id" });
   db.Report.belongsTo(db.User, { foreignKey: "user_id" });
@@ -95,10 +94,6 @@ if (db.User && db.ModerationAction) {
   db.ModerationAction.belongsTo(db.User, { foreignKey: "performed_by" });
 }
 
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
 if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db.RouteResult) {
   db.RouteRequest.hasMany(db.RouteRequestConstraint, {
     foreignKey: "route_req_id",
@@ -121,34 +116,67 @@ if (db.RouteRequest && db.RouteRequestConstraint && db.RouteConstraintType && db
   });
 }
 
+if (db.User && db.AlertSubscription) {
+  db.User.hasMany(db.AlertSubscription, {
+    foreignKey: "user_id",
+    as: "alertSubscriptions",
+  });
+
+  db.AlertSubscription.belongsTo(db.User, {
+    foreignKey: "user_id",
+    as: "user",
+  });
+}
+
+if (db.Area && db.AlertSubscription) {
+  db.Area.hasMany(db.AlertSubscription, {
+    foreignKey: "area_id",
+    as: "subscriptions",
+  });
+
+  db.AlertSubscription.belongsTo(db.Area, {
+    foreignKey: "area_id",
+    as: "area",
+  });
+}
+
+if (db.IncidentType && db.AlertSubscription) {
+  db.IncidentType.hasMany(db.AlertSubscription, {
+    foreignKey: "type_id",
+    as: "subscriptions",
+  });
+
+  db.AlertSubscription.belongsTo(db.IncidentType, {
+    foreignKey: "type_id",
+    as: "type",
+  });
+}
+
+if (db.Incident && db.AlertRecord) {
+  db.Incident.hasMany(db.AlertRecord, {
+    foreignKey: "incident_id",
+    as: "alertRecords",
+  });
+
+  db.AlertRecord.belongsTo(db.Incident, {
+    foreignKey: "incident_id",
+    as: "incident",
+  });
+}
+
+if (db.AlertSubscription && db.AlertRecord) {
+  db.AlertSubscription.hasMany(db.AlertRecord, {
+    foreignKey: "subscription_id",
+    as: "alertRecords",
+  });
+
+  db.AlertRecord.belongsTo(db.AlertSubscription, {
+    foreignKey: "subscription_id",
+    as: "subscription",
+  });
+}
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-
-
-
-db.Incident.belongsTo(db.IncidentType, {
-  foreignKey: "type_id",
-  as: "type",
-});
-
-db.IncidentType.hasMany(db.Incident, {
-  foreignKey: "type_id",
-  as: "incidents",
-});
-
-
-db.Incident.belongsTo(db.Checkpoint, {
-  foreignKey: "checkpoint_id",
-  as: "checkpoint",
-});
-
-
-db.Incident.belongsTo(db.User, {
-  foreignKey: "created_by",
-  as: "creator",
-});
-
-
 module.exports = db;
-

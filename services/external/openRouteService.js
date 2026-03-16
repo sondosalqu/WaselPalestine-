@@ -1,7 +1,7 @@
 const axios = require("axios");
-const { getCache, setCache } = require("../../utils/apiCache");
+const { getCache, setCache } = require("../../utils/routeUtils");
 
-const ROUTE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const ROUTE_TTL_MS = 10 * 60 * 1000; 
 
 const orsClient = axios.create({
   baseURL:

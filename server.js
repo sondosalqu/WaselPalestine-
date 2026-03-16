@@ -21,8 +21,10 @@ app.use("/api/v1/reports", require("./routes/reportVote.routes"));
 
 app.use("/api/v1", require("./routes/moderation.routes"));
 
+app.use("/api/v1/alerts", require("./routes/alerts.routes"));
 
 app.use("/api/v1/incidents", require("./routes/incidentRout"));
+
 //test
 
 
