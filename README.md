@@ -12,12 +12,15 @@ The platform aggregates data and exposes it through versioned APIs that can be c
 
 * Node.js
 * Express.js
-* Relational Database
+* Relational Database (MySQL)
+* Sequelize ORM + Raw Queries
 * JWT Authentication (Access + Refresh Tokens)
 * OpenStreetMap API
+* OpenWeather API
 * CORS
 * API-Dog (API Documentation & Testing)
-* k6 (Planned for performance testing)
+* k6 (Performance & Load Testing)
+* Docker & Docker Compose
 
 ---
 
@@ -28,13 +31,14 @@ The system follows a **layered architecture**:
 * **Controller Layer** → Handles HTTP requests and responses
 * **Service Layer** → Contains business logic
 * **Repository Layer** → Handles database operations
-* **External Services Layer** → Integrates with OpenStreetMap
+* **External Services Layer** → Integrates with APIs (OpenStreetMap, Weather)
 
-This architecture ensures:
+### Why this architecture?
 
 * Separation of concerns
 * Scalability
 * Maintainability
+* Easier testing and debugging
 
 ---
 
@@ -65,10 +69,10 @@ The system uses a relational database designed to support reporting, moderation,
 
 * Users can create reports
 * Reports can be voted on
-* Duplicate reports detection supported
-* Moderation actions are fully auditable
-* Checkpoints maintain status history
-* Route requests support constraints (avoid checkpoints/areas)
+* Duplicate detection supported
+* Moderation actions are auditable
+* Checkpoints maintain history
+* Routes support constraints
 * Alerts triggered by incidents
 
 ---
@@ -87,60 +91,40 @@ All endpoints follow RESTful standards and are versioned:
 /api/v1/...
 ```
 
-### 📌 Reports Endpoints
+### Example Endpoints
 
-#### 🔹 Create Report
+#### Reports
 
-```http
-POST /api/v1/reports
-```
+* `POST /api/v1/reports`
+* `GET /api/v1/reports`
+* `GET /api/v1/reports/:id`
+* `POST /api/v1/reports/:id/vote`
+* `DELETE /api/v1/reports/:id/vote`
 
-```json
-{
-  "category": "accident",
-  "description": "another accident near checkpoint",
-  "report_lat": 32.22,
-  "report_lng": 35.26
-}
-```
+#### Incidents
 
----
+* `POST /api/v1/incidents`
+* `GET /api/v1/incidents`
 
-#### 🔹 Get All Reports
+#### Users
 
-```http
-GET /api/v1/reports
-```
+* `POST /api/v1/users/register`
+* `POST /api/v1/users/login`
 
----
+#### Routes
 
-#### 🔹 Get Report By ID
+* `POST /api/v1/routes/estimate`
 
-```http
-GET /api/v1/reports/{id}
-```
+#### Alerts
 
----
+* `POST /api/v1/alerts/subscribe`
 
-#### 🔹 Vote on Report
+### API Design Rationale
 
-```http
-POST /api/v1/reports/{id}/vote
-```
-
-```json
-{
-  "vote_type": 1
-}
-```
-
----
-
-#### 🔹 Remove Vote from Report
-
-```http
-DELETE /api/v1/reports/{id}/vote
-```
+* RESTful structure ensures simplicity and consistency
+* Versioning (`/api/v1`) supports future updates
+* Clear separation between resources
+* Supports filtering, sorting, and pagination
 
 ---
 
@@ -151,11 +135,14 @@ The system uses **JWT Authentication**:
 * Access Token
 * Refresh Token
 
-Features:
+### Features
 
-* Secured endpoints
-* Token-based authentication
-* CORS enabled for cross-origin requests
+* Secure endpoints
+* Role-based access (admin / moderator / user)
+* Password hashing (bcrypt)
+* Token expiration handling
+* CORS enabled
+* Input validation and error handling
 
 ---
 
@@ -163,13 +150,15 @@ Features:
 
 The system integrates with:
 
-* **OpenStreetMap API** → for geolocation and route estimation
+* **OpenStreetMap API** → routing & geolocation
+* **OpenWeather API** → weather data
 
-Handled challenges:
+### Handling Challenges
 
-* External API reliability
-* Response handling
-* Data integration
+* API authentication
+* Rate limiting
+* Timeout handling
+* Data transformation and integration
 
 ---
 
@@ -186,60 +175,95 @@ Includes:
 
 ---
 
-## ⚡ Performance Testing
+## ⚡ Performance Testing with k6
 
-Performance testing is planned using **k6**.
+Performance testing was implemented using **k6**.
 
-Planned scenarios:
+### Scenarios
 
-* Read-heavy workloads
-* Write-heavy workloads
-* Mixed workloads
-* Spike testing
-* Soak testing
+* Read-heavy
+* Write-heavy
+* Mixed
+* Spike
+* Soak
 
-Metrics:
+### Summary Results
 
-* Response time
-* Latency (p95)
-* Throughput
-* Error rate
+| Test Type   | Avg Response | p95      | Throughput  | Error |
+| ----------- | ------------ | -------- | ----------- | ----- |
+| Read-heavy  | 13.88 ms     | 26.43 ms | 35.81 req/s | 0%    |
+| Write-heavy | 717.93 ms    | 1.97 s   | 13.91 req/s | 0%    |
+| Mixed       | 374.57 ms    | 1.15 s   | 36.27 req/s | 0%    |
+| Spike       | 15.77 ms     | 33.33 ms | 52.56 req/s | 0%    |
+| Soak        | 17.26 ms     | 30.94 ms | 9.89 req/s  | 0%    |
+
+### Key Insights
+
+* Read operations are very fast
+* Write operations slower due to DB
+* System stable under load
+* Zero failed requests
 
 ---
 
-## 🐳 Deployment
+## 🐳 Deployment with Docker
 
-Docker support is planned and will be added in future deployment stages.
+The system is fully containerized using Docker.
+
+### Run with Docker
+
+```bash
+docker compose up --build
+```
+
+### Services
+
+* App → http://localhost:3000
+* Database → MySQL inside Docker
+
+### Notes
+
+* DB connection uses retry mechanism
+* Docker ensures consistent environment
+* Easy deployment and scalability
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Installation & Running
 
-Clone the repository:
+### Option 1: Local
 
 ```bash
 git clone https://github.com/sondosalqu/WaselPalestine-.git
-```
-
-Navigate to the project folder:
-
-```bash
 cd WaselPalestine-
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Run the development server:
-
-```bash
 npm run dev
 ```
 
+---
 
+### Option 2: Docker
+
+```bash
+docker compose up --build
+```
+
+Test:
+
+```
+http://localhost:3000/test
+```
+
+---
+
+## 🔁 Version Control Workflow
+
+* Feature branches used
+* Pull requests for merging
+* Meaningful commit messages
+* GitHub used for collaboration
+
+---
 
 ## 👥 Team Members
 
@@ -247,10 +271,8 @@ npm run dev
 * Mayar Obeid
 * Haya Khattabeh
 
-
+---
 
 ## 📌 Project Notes
 
-This project was developed as part of the Advanced Software Engineering course. It focuses on backend engineering concepts including API design, system architecture, authentication, external integrations, and performance considerations.
-
----
+This project was developed as part of the Advanced Software Engineering course. It demonstrates backend system design including API architecture, database modeling, authentication, external integrations, performance optimization, and containerized deployment.
