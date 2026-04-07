@@ -88,7 +88,7 @@ The design supports core functionalities such as:
 - Route estimation with constraints
 - Alert and subscription system
 
-![Database ERD](./docs/erd.png)
+![Database ERD](./docs/a1.png)
 
 ---
 
