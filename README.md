@@ -17,7 +17,6 @@ The platform aggregates data and exposes it through versioned APIs that can be c
 * JWT Authentication (Access + Refresh Tokens)
 * OpenStreetMap API
 * OpenWeather API
-* CORS
 * API-Dog (API Documentation & Testing)
 * k6 (Performance & Load Testing)
 * Docker & Docker Compose
