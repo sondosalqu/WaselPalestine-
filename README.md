@@ -78,6 +78,16 @@ The system uses a relational database designed to support reporting, moderation,
 
 ## 📊 Database ERD
 
+The following diagram represents the database schema, showing all entities, relationships, and constraints used in the system.
+
+The design supports core functionalities such as:
+- User management and authentication
+- Report creation, voting, and moderation
+- Incident tracking and verification
+- Checkpoint status history
+- Route estimation with constraints
+- Alert and subscription system
+
 ![Database ERD](./docs/erd.png)
 
 ---
