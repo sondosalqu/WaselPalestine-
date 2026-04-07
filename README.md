@@ -288,6 +288,31 @@ http://localhost:3000/test
 ```
 
 ---
+### Environment Variables
+
+Create a .env file in the root directory and add:
+
+DB_NAME=myDB
+DB_USER=root
+DB_PASSWORD=123123
+
+DB_HOST=localhost
+DB_PORT=3306
+NODE_ENV=development
+
+PORT=3000
+
+JWT_ACCESS_SECRET=your_access_secret
+JWT_REFRESH_SECRET=your_refresh_secret
+ACCESS_TOKEN_EXPIRES=15m
+REFRESH_TOKEN_EXPIRES=7d
+BCRYPT_SALT_ROUNDS=10
+
+OPENWEATHER_API_KEY=your_openweather_api_key
+OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
+
+ORS_API_KEY=your_openrouteservice_api_key
+ORS_BASE_URL=https://api.openrouteservice.org
 
 ## 🔁 Version Control Workflow
 
