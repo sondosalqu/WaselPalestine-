@@ -93,31 +93,55 @@ All endpoints follow RESTful standards and are versioned:
 ### Example Endpoints
 
 #### Reports
-
 * `POST /api/v1/reports`
 * `GET /api/v1/reports`
 * `GET /api/v1/reports/:id`
 * `POST /api/v1/reports/:id/vote`
 * `DELETE /api/v1/reports/:id/vote`
+  
+#### Moderation
+- `PATCH /api/v1/reports/{id}/verify` → verify report
+- `PATCH /api/v1/reports/{id}/reject` → reject report
+- `PATCH /api/v1/reports/{id}/close` → close report
+- `PATCH /api/v1/reports/{id}/mark-duplicate` → mark report as duplicate
+
+- `GET /api/v1/reports/{id}/moderation-actions` → get moderation history for a report
+- `GET /api/v1/reports/pending` → get all pending reports
 
 #### Incidents
+- POST /api/v1/incidents
+- GET /api/v1/incidents
+- PUT /api/v1/incidents/:id
+- PATCH /api/v1/incidents/:id/close
+- PATCH /api/v1/incidents/:id/verify
 
-* `POST /api/v1/incidents`
-* `GET /api/v1/incidents`
-
-#### Users
-
-* `POST /api/v1/users/register`
-* `POST /api/v1/users/login`
-
+#### Users Authentication
+- POST /api/v1/users/signup
+- POST /api/v1/users/signin
+- POST /api/v1/users/refresh
+- POST /api/v1/users/logout
+  
 #### Routes
-
-* `POST /api/v1/routes/estimate`
+- `POST /api/v1/routes/estimate` → create route request (origin, destination, constraints)
+- `POST /api/v1/routes/{route_req_id}/calculate` → calculate route result
+- `GET /api/v1/routes/{route_req_id}` → get route details
+- `GET /api/v1/routes` → get route history (with pagination)
 
 #### Alerts
+- `POST /api/v1/alerts/subscriptions` → create alert subscription
+- `GET /api/v1/alerts/subscriptions` → get user subscriptions
+- `GET /api/v1/alerts/alerts` → get user alerts
+- `PATCH /api/v1/alerts/alerts/:id/read` → mark alert as read
+- `PATCH /api/v1/alerts/subscriptions/:id` → deactivate alert subscription
 
-* `POST /api/v1/alerts/subscribe`
+#### Checkpoints
+- `GET /api/v1/checkpoints` → get all checkpoints (with filtering, sorting, pagination)
+- `GET /api/v1/checkpoints/{id}` → get checkpoint by ID
+- `POST /api/v1/checkpoints` → create new checkpoint
+- `PUT /api/v1/checkpoints/{id}` → update checkpoint details
+- `PATCH /api/v1/checkpoints/{id}/status` → update checkpoint status (OPEN / CLOSED)
 
+  
 ### API Design Rationale
 
 * RESTful structure ensures simplicity and consistency
