@@ -291,7 +291,7 @@ http://localhost:3000/test
 ## 👥 Team Members
 
 * Sondos Alqotob
-* Mayar Obeid
+* Maiar Obeid
 * Haya Khattabeh
 
 ---
