@@ -1,11 +1,12 @@
-const axios = require("axios");
-const { getCache, setCache } = require("../../utils/apiCache");
 
-const ROUTE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+const axios = require("axios");
+const { getCache, setCache } = require("../../utils/cache");
+
+const ROUTE_TTL_MS = 10 * 60 * 1000;
 
 const orsClient = axios.create({
-  baseURL:
-    process.env.ORS_BASE_URL || "https://api.openrouteservice.org",
+  baseURL: process.env.ORS_BASE_URL || "https://api.openrouteservice.org",
   timeout: 10000,
   headers: {
     Authorization: process.env.ORS_API_KEY || "",
@@ -14,40 +15,15 @@ const orsClient = axios.create({
   },
 });
 
-function buildRouteCacheKey({
-  originLat,
-  originLng,
-  destLat,
-  destLng,
-  profile = "driving-car",
-}) {
-  return `ors-route:${profile}:${Number(originLat).toFixed(5)}:${Number(
-    originLng
-  ).toFixed(5)}:${Number(destLat).toFixed(5)}:${Number(destLng).toFixed(5)}`;
+function buildRouteCacheKey({ originLat, originLng, destLat, destLng, profile = "driving-car" }) {
+  return `ors-route:${profile}:${Number(originLat).toFixed(5)}:${Number(originLng).toFixed(5)}:${Number(destLat).toFixed(5)}:${Number(destLng).toFixed(5)}`;
 }
 
-async function getRouteFromORS({
-  originLat,
-  originLng,
-  destLat,
-  destLng,
-  profile = "driving-car",
-}) {
-  const cacheKey = buildRouteCacheKey({
-    originLat,
-    originLng,
-    destLat,
-    destLng,
-    profile,
-  });
+async function getRouteFromORS({ originLat, originLng, destLat, destLng, profile = "driving-car" }) {
+  const cacheKey = buildRouteCacheKey({ originLat, originLng, destLat, destLng, profile });
 
   const cached = getCache(cacheKey);
-  if (cached) {
-    return {
-      ...cached,
-      cache_hit: true,
-    };
-  }
+  if (cached) return { ...cached, cache_hit: true };
 
   if (!process.env.ORS_API_KEY) {
     const error = new Error("Missing ORS_API_KEY");
@@ -63,11 +39,7 @@ async function getRouteFromORS({
       ],
     };
 
-    const response = await orsClient.post(
-      `/v2/directions/${profile}/geojson`,
-      body
-    );
-
+    const response = await orsClient.post(`/v2/directions/${profile}/geojson`, body);
     const feature = response.data?.features?.[0];
     const summary = feature?.properties?.summary;
 
@@ -89,42 +61,27 @@ async function getRouteFromORS({
     };
 
     setCache(cacheKey, result, ROUTE_TTL_MS);
-
     return result;
   } catch (err) {
     const status = err.response?.status;
 
     if (status === 429) {
-      const rateError = new Error("ORS rate limit exceeded");
-      rateError.code = "ORS_RATE_LIMIT";
-      rateError.status = 429;
-      throw rateError;
+      const e = new Error("ORS rate limit exceeded");
+      e.code = "ORS_RATE_LIMIT"; e.status = 429; throw e;
     }
-
     if (status === 401 || status === 403) {
-      const authError = new Error("ORS authentication failed");
-      authError.code = "ORS_AUTH_ERROR";
-      authError.status = status;
-      throw authError;
+      const e = new Error("ORS authentication failed");
+      e.code = "ORS_AUTH_ERROR"; e.status = status; throw e;
     }
-
     if (err.code === "ECONNABORTED") {
-      const timeoutError = new Error("ORS request timeout");
-      timeoutError.code = "ORS_TIMEOUT";
-      throw timeoutError;
+      const e = new Error("ORS request timeout");
+      e.code = "ORS_TIMEOUT"; throw e;
     }
 
-    const genericError = new Error(
-      err.response?.data?.error?.message ||
-        err.message ||
-        "ORS request failed"
-    );
-    genericError.code = "ORS_REQUEST_FAILED";
-    genericError.status = status || 500;
-    throw genericError;
+    const e = new Error(err.response?.data?.error?.message || err.message || "ORS request failed");
+    e.code = "ORS_REQUEST_FAILED"; e.status = status || 500;
+    throw e;
   }
 }
 
-module.exports = {
-  getRouteFromORS,
-};
+module.exports = { getRouteFromORS };

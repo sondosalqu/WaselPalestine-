@@ -1,3 +1,4 @@
+
 const { calculateRouteForRequest } = require("../services/routeEstimationService");
 
 const calculateRoute = async (req, res) => {
@@ -19,7 +20,6 @@ const calculateRoute = async (req, res) => {
     });
   } catch (error) {
     console.error("calculateRoute error:", error);
-
     return res.status(error.status || 500).json({
       success: false,
       message: error.message || "Failed to calculate route",

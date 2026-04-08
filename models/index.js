@@ -51,14 +51,13 @@ fs
     db[model.name] = model;
   });
 
-// associations defined inside model files
+
 Object.keys(db).forEach((modelName) => {
   if (db[modelName] && typeof db[modelName].associate === "function") {
     db[modelName].associate(db);
   }
 });
 
-// Optional relations - only if models exist
 if (db.User && db.Report) {
   db.User.hasMany(db.Report, { foreignKey: "user_id" });
   db.Report.belongsTo(db.User, { foreignKey: "user_id" });
@@ -153,6 +152,66 @@ if (db.Incident && db.User) {
   db.Incident.belongsTo(db.User, {
     foreignKey: "created_by",
     as: "creator",
+  });
+}
+
+if (db.User && db.AlertSubscription) {
+  db.User.hasMany(db.AlertSubscription, {
+    foreignKey: "user_id",
+    as: "alertSubscriptions",
+  });
+
+  db.AlertSubscription.belongsTo(db.User, {
+    foreignKey: "user_id",
+    as: "user",
+  });
+}
+
+if (db.Area && db.AlertSubscription) {
+  db.Area.hasMany(db.AlertSubscription, {
+    foreignKey: "area_id",
+    as: "subscriptions",
+  });
+
+  db.AlertSubscription.belongsTo(db.Area, {
+    foreignKey: "area_id",
+    as: "area",
+  });
+}
+
+if (db.IncidentType && db.AlertSubscription) {
+  db.IncidentType.hasMany(db.AlertSubscription, {
+    foreignKey: "type_id",
+    as: "subscriptions",
+  });
+
+  db.AlertSubscription.belongsTo(db.IncidentType, {
+    foreignKey: "type_id",
+    as: "type",
+  });
+}
+
+if (db.Incident && db.AlertRecord) {
+  db.Incident.hasMany(db.AlertRecord, {
+    foreignKey: "incident_id",
+    as: "alertRecords",
+  });
+
+  db.AlertRecord.belongsTo(db.Incident, {
+    foreignKey: "incident_id",
+    as: "incident",
+  });
+}
+
+if (db.AlertSubscription && db.AlertRecord) {
+  db.AlertSubscription.hasMany(db.AlertRecord, {
+    foreignKey: "subscription_id",
+    as: "alertRecords",
+  });
+
+  db.AlertRecord.belongsTo(db.AlertSubscription, {
+    foreignKey: "subscription_id",
+    as: "subscription",
   });
 }
 

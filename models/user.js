@@ -1,3 +1,4 @@
+
 'use strict';
 
 
@@ -45,4 +46,3 @@ module.exports = (sequelize, DataTypes) => {
   return User;
 
 };
-

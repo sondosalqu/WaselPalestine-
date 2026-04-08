@@ -1,15 +1,14 @@
+
+
 const cache = new Map();
 
 function getCache(key) {
   const entry = cache.get(key);
-
   if (!entry) return null;
-
   if (Date.now() > entry.expiresAt) {
     cache.delete(key);
     return null;
   }
-
   return entry.value;
 }
 
@@ -28,9 +27,4 @@ function clearCache() {
   cache.clear();
 }
 
-module.exports = {
-  getCache,
-  setCache,
-  deleteCache,
-  clearCache,
-};
+module.exports = { getCache, setCache, deleteCache, clearCache };

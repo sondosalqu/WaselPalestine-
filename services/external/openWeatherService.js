@@ -1,12 +1,12 @@
-const axios = require("axios");
-const { getCache, setCache } = require("../../utils/apiCache");
 
-const WEATHER_TTL_MS = 10 * 60 * 1000; 
+
+const axios = require("axios");
+const { getCache, setCache } = require("../../utils/cache");
+
+const WEATHER_TTL_MS = 10 * 60 * 1000;
 
 const weatherClient = axios.create({
-  baseURL:
-    process.env.OPENWEATHER_BASE_URL ||
-    "https://api.openweathermap.org/data/2.5",
+  baseURL: process.env.OPENWEATHER_BASE_URL || "https://api.openweathermap.org/data/2.5",
   timeout: 10000,
 });
 
@@ -18,15 +18,9 @@ async function getOpenWeather(lat, lng) {
   const cacheKey = buildWeatherCacheKey(lat, lng);
 
   const cached = getCache(cacheKey);
-  if (cached) {
-    return {
-      ...cached,
-      cache_hit: true,
-    };
-  }
+  if (cached) return { ...cached, cache_hit: true };
 
   const apiKey = process.env.OPENWEATHER_API_KEY;
-
   if (!apiKey) {
     const error = new Error("Missing OPENWEATHER_API_KEY");
     error.code = "OPENWEATHER_MISSING_KEY";
@@ -35,13 +29,7 @@ async function getOpenWeather(lat, lng) {
 
   try {
     const response = await weatherClient.get("/weather", {
-      params: {
-        lat,
-        lon: lng,
-        appid: apiKey,
-        units: "metric",
-        lang: "ar",
-      },
+      params: { lat, lon: lng, appid: apiKey, units: "metric", lang: "ar" },
     });
 
     const d = response.data;
@@ -60,58 +48,27 @@ async function getOpenWeather(lat, lng) {
     };
 
     setCache(cacheKey, result, WEATHER_TTL_MS);
-
     return result;
   } catch (err) {
     const status = err.response?.status;
 
     if (status === 429) {
-      const rateError = new Error("OpenWeather rate limit exceeded");
-      rateError.code = "OPENWEATHER_RATE_LIMIT";
-      rateError.status = 429;
-      throw rateError;
+      const e = new Error("OpenWeather rate limit exceeded");
+      e.code = "OPENWEATHER_RATE_LIMIT"; e.status = 429; throw e;
     }
-
     if (status === 401 || status === 403) {
-      const authError = new Error("OpenWeather authentication failed");
-      authError.code = "OPENWEATHER_AUTH_ERROR";
-      authError.status = status;
-      throw authError;
+      const e = new Error("OpenWeather authentication failed");
+      e.code = "OPENWEATHER_AUTH_ERROR"; e.status = status; throw e;
     }
-
     if (err.code === "ECONNABORTED") {
-      const timeoutError = new Error("OpenWeather request timeout");
-      timeoutError.code = "OPENWEATHER_TIMEOUT";
-      throw timeoutError;
+      const e = new Error("OpenWeather request timeout");
+      e.code = "OPENWEATHER_TIMEOUT"; throw e;
     }
 
-    const genericError = new Error(
-      err.response?.data?.message || err.message || "OpenWeather request failed"
-    );
-    genericError.code = "OPENWEATHER_REQUEST_FAILED";
-    genericError.status = status || 500;
-    throw genericError;
+    const e = new Error(err.response?.data?.message || err.message || "OpenWeather request failed");
+    e.code = "OPENWEATHER_REQUEST_FAILED"; e.status = status || 500;
+    throw e;
   }
 }
 
-function getWeatherDurationMultiplier(weather) {
-  if (!weather?.main) return 1;
-
-  const main = String(weather.main).toLowerCase();
-  const wind = Number(weather.wind_mps || 0);
-
-  if (main.includes("thunderstorm")) return 1.3;
-  if (main.includes("rain") || main.includes("drizzle")) return 1.2;
-  if (main.includes("snow")) return 1.35;
-  if (main.includes("fog") || main.includes("mist") || main.includes("haze")) {
-    return 1.15;
-  }
-  if (wind >= 10) return 1.1;
-
-  return 1;
-}
-
-module.exports = {
-  getOpenWeather,
-  getWeatherDurationMultiplier,
-};
+module.exports = { getOpenWeather };

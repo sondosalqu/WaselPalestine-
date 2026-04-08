@@ -1,3 +1,5 @@
+
+
 const { v4: uuidv4 } = require("uuid");
 const {
   RouteRequest,
@@ -7,26 +9,27 @@ const {
 } = require("../models");
 
 const { getRouteFromORS } = require("./external/openRouteService");
-const {
-  getOpenWeather,
-  getWeatherDurationMultiplier,
-} = require("./external/openWeatherService");require("./external/openWeatherService");
+const { getOpenWeather } = require("./external/openWeatherService");
+const { haversineKm } = require("../utils/routeUtils");
 
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (x) => (Number(x) * Math.PI) / 180;
-  const R = 6371;
 
-  const dLat = toRad(Number(lat2) - Number(lat1));
-  const dLon = toRad(Number(lon2) - Number(lon1));
 
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) ** 2;
+function getWeatherDurationMultiplier(weather) {
+  if (!weather?.main) return 1;
 
-  return 2 * R * Math.asin(Math.sqrt(a));
+  const main = String(weather.main).toLowerCase();
+  const wind = Number(weather.wind_mps || 0);
+
+  if (main.includes("thunderstorm")) return 1.3;
+  if (main.includes("rain") || main.includes("drizzle")) return 1.2;
+  if (main.includes("snow")) return 1.35;
+  if (main.includes("fog") || main.includes("mist") || main.includes("haze")) return 1.15;
+  if (wind >= 10) return 1.1;
+
+  return 1;
 }
+
+
 
 async function calculateRouteForRequest(route_req_id, user_id) {
   if (!user_id) {
@@ -36,7 +39,6 @@ async function calculateRouteForRequest(route_req_id, user_id) {
   }
 
   const routeReq = await RouteRequest.findByPk(route_req_id);
-
   if (!routeReq) {
     const error = new Error("Route request not found");
     error.status = 404;
@@ -60,33 +62,18 @@ async function calculateRouteForRequest(route_req_id, user_id) {
     checkpoint_id: c.checkpoint_id,
   }));
 
-  let checkpointPenaltyKm = 0;
-  let areaPenaltyKm = 0;
-  let checkpointPenaltyMin = 0;
-  let areaPenaltyMin = 0;
+  let checkpointPenaltyKm = 0, areaPenaltyKm = 0;
+  let checkpointPenaltyMin = 0, areaPenaltyMin = 0;
 
   for (const c of constraints) {
     const type = c.type?.name;
-
-    if (type === "avoid_checkpoint") {
-      checkpointPenaltyKm += 2;
-      checkpointPenaltyMin += 6;
-    }
-
-    if (type === "avoid_area") {
-      areaPenaltyKm += 4;
-      areaPenaltyMin += 10;
-    }
+    if (type === "avoid_checkpoint") { checkpointPenaltyKm += 2; checkpointPenaltyMin += 6; }
+    if (type === "avoid_area")       { areaPenaltyKm += 4;        areaPenaltyMin += 10; }
   }
 
-  let baseDistanceKm;
-  let baseDurationMin;
-
-  let routingSource = "external";
-  let routingProvider = "openrouteservice";
-  let routingCacheHit = false;
-  let routingStatus = 200;
-  let routingFallbackReason = null;
+  let baseDistanceKm, baseDurationMin;
+  let routingSource = "external", routingProvider = "openrouteservice";
+  let routingCacheHit = false, routingStatus = 200, routingFallbackReason = null;
 
   try {
     const routeData = await getRouteFromORS({
@@ -97,34 +84,23 @@ async function calculateRouteForRequest(route_req_id, user_id) {
       profile: "driving-car",
     });
 
-    baseDistanceKm = routeData.distance_km;
+    baseDistanceKm  = routeData.distance_km;
     baseDurationMin = routeData.duration_min;
     routingCacheHit = routeData.cache_hit;
-    routingStatus = routeData.upstream_status;
+    routingStatus   = routeData.upstream_status;
   } catch (routeError) {
-    baseDistanceKm = haversineKm(
-      routeReq.origin_lat,
-      routeReq.origin_lng,
-      routeReq.dest_lat,
-      routeReq.dest_lng
-    );
-
+    baseDistanceKm  = haversineKm(routeReq.origin_lat, routeReq.origin_lng, routeReq.dest_lat, routeReq.dest_lng);
     baseDurationMin = (baseDistanceKm / 40) * 60;
-
-    routingSource = "heuristic_fallback";
+    routingSource   = "heuristic_fallback";
     routingProvider = "internal-haversine";
-    routingStatus = routeError.status || 500;
+    routingStatus   = routeError.status || 500;
     routingFallbackReason = routeError.message;
   }
 
-  let weather_origin = null;
-  let weather_dest = null;
-  let weatherAvailable = true;
-  let weatherNote = null;
-  let weatherOriginCacheHit = false;
-  let weatherDestCacheHit = false;
-  let weatherOriginStatus = 200;
-  let weatherDestStatus = 200;
+  let weather_origin = null, weather_dest = null;
+  let weatherAvailable = true, weatherNote = null;
+  let weatherOriginCacheHit = false, weatherDestCacheHit = false;
+  let weatherOriginStatus = 200, weatherDestStatus = 200;
 
   try {
     const [originWeather, destWeather] = await Promise.all([
@@ -133,18 +109,18 @@ async function calculateRouteForRequest(route_req_id, user_id) {
     ]);
 
     weather_origin = originWeather;
-    weather_dest = destWeather;
+    weather_dest   = destWeather;
     weatherOriginCacheHit = originWeather.cache_hit;
-    weatherDestCacheHit = destWeather.cache_hit;
-    weatherOriginStatus = originWeather.upstream_status || 200;
-    weatherDestStatus = destWeather.upstream_status || 200;
+    weatherDestCacheHit   = destWeather.cache_hit;
+    weatherOriginStatus   = originWeather.upstream_status || 200;
+    weatherDestStatus     = destWeather.upstream_status || 200;
   } catch (weatherError) {
-    weatherAvailable = false;
-    weatherNote =
-      "Weather provider unavailable. Estimation continued without external weather impact.";
+    weatherAvailable    = false;
+    weatherNote         = "Weather provider unavailable. Estimation continued without external weather impact.";
     weatherOriginStatus = weatherError.status || 500;
-    weatherDestStatus = weatherError.status || 500;
+    weatherDestStatus   = weatherError.status || 500;
   }
+
 
   const weatherMultiplier = weatherAvailable
     ? Math.max(
@@ -154,19 +130,14 @@ async function calculateRouteForRequest(route_req_id, user_id) {
     : 1;
 
   const weatherAdjustedBaseMin = baseDurationMin * weatherMultiplier;
-  const weatherPenaltyMin = weatherAdjustedBaseMin - baseDurationMin;
+  const weatherPenaltyMin      = weatherAdjustedBaseMin - baseDurationMin;
+  const finalDistanceKm        = baseDistanceKm + checkpointPenaltyKm + areaPenaltyKm;
+  const finalDurationMin       = weatherAdjustedBaseMin + checkpointPenaltyMin + areaPenaltyMin;
 
-  const finalDistanceKm = baseDistanceKm + checkpointPenaltyKm + areaPenaltyKm;
-  const finalDurationMin =
-    weatherAdjustedBaseMin + checkpointPenaltyMin + areaPenaltyMin;
 
   const metadata = {
-    estimation_method:
-      routingSource === "external"
-        ? "external-routing-plus-heuristics"
-        : "heuristic-fallback",
-    note:
-      "Estimated using external routing when available, constraints penalties, and weather impact when available.",
+    estimation_method: routingSource === "external" ? "external-routing-plus-heuristics" : "heuristic-fallback",
+    note: "Estimated using external routing when available, constraints penalties, and weather impact when available.",
     providers: {
       routing_provider: routingProvider,
       weather_provider: "openweather",
@@ -179,39 +150,32 @@ async function calculateRouteForRequest(route_req_id, user_id) {
     weather_available: weatherAvailable,
     weather_note: weatherNote,
     factors_applied: {
-      avoid_checkpoint_count: appliedConstraints.filter(
-        (c) => c.type === "avoid_checkpoint"
-      ).length,
-      avoid_area_count: appliedConstraints.filter(
-        (c) => c.type === "avoid_area"
-      ).length,
-      weather_multiplier: Number(weatherMultiplier.toFixed(2)),
+      avoid_checkpoint_count: appliedConstraints.filter((c) => c.type === "avoid_checkpoint").length,
+      avoid_area_count:       appliedConstraints.filter((c) => c.type === "avoid_area").length,
+      weather_multiplier:     Number(weatherMultiplier.toFixed(2)),
     },
     cache: {
-      route_hit: routingCacheHit,
+      route_hit:          routingCacheHit,
       weather_origin_hit: weatherOriginCacheHit,
-      weather_dest_hit: weatherDestCacheHit,
+      weather_dest_hit:   weatherDestCacheHit,
     },
     upstream_status: {
-      routing: routingStatus,
-      weather_origin: weatherOriginStatus,
+      routing:             routingStatus,
+      weather_origin:      weatherOriginStatus,
       weather_destination: weatherDestStatus,
     },
     breakdown: {
-      base_distance_km: Number(baseDistanceKm.toFixed(3)),
-      checkpoint_penalty_km: Number(checkpointPenaltyKm.toFixed(3)),
-      area_penalty_km: Number(areaPenaltyKm.toFixed(3)),
-      final_distance_km: Number(finalDistanceKm.toFixed(3)),
-      base_duration_min: Number(baseDurationMin.toFixed(2)),
-      weather_penalty_min: Number(weatherPenaltyMin.toFixed(2)),
+      base_distance_km:       Number(baseDistanceKm.toFixed(3)),
+      checkpoint_penalty_km:  Number(checkpointPenaltyKm.toFixed(3)),
+      area_penalty_km:        Number(areaPenaltyKm.toFixed(3)),
+      final_distance_km:      Number(finalDistanceKm.toFixed(3)),
+      base_duration_min:      Number(baseDurationMin.toFixed(2)),
+      weather_penalty_min:    Number(weatherPenaltyMin.toFixed(2)),
       checkpoint_penalty_min: Number(checkpointPenaltyMin.toFixed(2)),
-      area_penalty_min: Number(areaPenaltyMin.toFixed(2)),
-      final_duration_min: Number(finalDurationMin.toFixed(2)),
+      area_penalty_min:       Number(areaPenaltyMin.toFixed(2)),
+      final_duration_min:     Number(finalDurationMin.toFixed(2)),
     },
-    weather: {
-      origin: weather_origin,
-      destination: weather_dest,
-    },
+    weather: { origin: weather_origin, destination: weather_dest },
     constraints: appliedConstraints,
   };
 
@@ -228,13 +192,7 @@ async function calculateRouteForRequest(route_req_id, user_id) {
     metadata,
   });
 
-  return {
-    routingSource,
-    weatherAvailable,
-    data: created,
-  };
+  return { routingSource, weatherAvailable, data: created };
 }
 
-module.exports = {
-  calculateRouteForRequest,
-};
+module.exports = { calculateRouteForRequest };
