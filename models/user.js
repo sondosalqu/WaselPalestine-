@@ -1,5 +1,6 @@
 'use strict';
 
+
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
     "User",
@@ -33,7 +34,6 @@ module.exports = (sequelize, DataTypes) => {
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
       },
     },
     {
@@ -43,4 +43,6 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   return User;
+
 };
+

@@ -5,7 +5,8 @@ const router = express.Router();
 const {
   signupUser,
   signinUser,  
-  refreshAccessToken 
+  refreshAccessToken ,
+  logoutUser,
 } = require("../controllers/userController");
 
 const { requireAuth } = require("../middleware/auth");
@@ -19,5 +20,7 @@ router.post("/signup", signupUser);
 router.post("/signin", signinUser);
 
 router.post("/refresh", refreshAccessToken);
+
+router.post("/logout", requireAuth, logoutUser);
 
 module.exports = router;

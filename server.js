@@ -14,16 +14,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/checkpoints", require("./routes/checkPointRout"));
 app.use("/api/v1/users", require("./routes/userRout"));
 
-
 app.use("/api/v1/routes", require("./routes/routeEstimationRoute"));
 app.use("/api/v1/reports", require("./routes/reports.routes"));
 app.use("/api/v1/reports", require("./routes/reportVote.routes"));
-
-app.use("/api/v1", require("./routes/moderation.routes"));
-
-
 app.use("/api/v1/incidents", require("./routes/incidentRout"));
-//test
+app.use("/api/v1", require("./routes/moderation.routes"));
 
 
 app.get("/test", (req, res) => res.send("hello world"));

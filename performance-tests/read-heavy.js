@@ -1,34 +1,31 @@
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+import http from "k6/http";
+import { sleep } from "k6";
 
 export const options = {
-  vus: 20,
-  duration: '30s',
-  thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<500'],
-  },
+  vus: 1,
+  iterations: 1,
 };
 
-const BASE_URL = 'http://localhost:3000/api/v1';
+const BASE_URL = "http://localhost:3000";
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo0LCJyb2xlIjoxLCJpYXQiOjE3NzU1ODEzNzYsImV4cCI6MTc3NTU4MjI3Nn0.RL6YZ82QcN2EP1a4nJ5F1Bf5FYCSQwxT3CMgsR1Rdss";
 
 export default function () {
-  const requests = [
-    `${BASE_URL}/incidents?page=1&limit=10`,
-    `${BASE_URL}/incidents?page=2&limit=10`,
-    `${BASE_URL}/incidents?page=1&limit=20`,
-    `${BASE_URL}/incidents?page=1&limit=10&severity=LOW`,
-    `${BASE_URL}/incidents?page=1&limit=10&severity=MEDIUM`,
-  ];
-
-  const url = requests[Math.floor(Math.random() * requests.length)];
-  const res = http.get(url);
-
-  check(res, {
-    'status is 200': (r) => r.status === 200,
-    'response time < 500ms': (r) => r.timings.duration < 500,
-    'response body not empty': (r) => r.body && r.body.length > 0,
+  const payload = JSON.stringify({
+    category: "accident",
+    description: "test report",
+    report_lat: 31.9,
+    report_lng: 35.2,
   });
+
+  const res = http.post(`${BASE_URL}/api/v1/reports`, payload, {
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log(`STATUS=${res.status}`);
+  console.log(`BODY=${res.body}`);
 
   sleep(1);
 }

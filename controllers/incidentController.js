@@ -1,9 +1,18 @@
+// controllers/incidentController.js
+const {
+  insertIncident,
+  fetchIncidents,
+  fetchIncidentById,
+  editIncident,
+  closeIncidentById,
+  verifyIncidentById,
+} = require("../services/incidentService");
 
-const db=require("../config/db.js");
-
-const {  sequelize,Incident } = require("../models");
-
-
+const {
+  isValidId,
+  isValidSeverity,
+  isValidIncidentStatus,
+} = require("../utils/validators");
 
 const createIncident = async (req, res) => {
   try {
@@ -22,20 +31,12 @@ const createIncident = async (req, res) => {
       });
     }
 
-    if (!req.user?.user_id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-        error: "User authentication required",
-      });
-    }
-
     const typeId = Number(type_id);
     const checkpointId = Number(checkpoint_id);
     const cleanDescription = String(description).trim();
     const sev = String(severity).toUpperCase().trim();
 
-    if (!Number.isInteger(typeId) || typeId <= 0) {
+    if (!isValidId(typeId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid type_id",
@@ -43,7 +44,7 @@ const createIncident = async (req, res) => {
       });
     }
 
-    if (!Number.isInteger(checkpointId) || checkpointId <= 0) {
+    if (!isValidId(checkpointId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid checkpoint_id",
@@ -59,8 +60,7 @@ const createIncident = async (req, res) => {
       });
     }
 
-    const allowedSeverity = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-    if (!allowedSeverity.includes(sev)) {
+    if (!isValidSeverity(sev)) {
       return res.status(400).json({
         success: false,
         message: "Invalid severity value",
@@ -68,17 +68,10 @@ const createIncident = async (req, res) => {
       });
     }
 
+   
     const created_by = req.user.user_id;
 
-    const incident = await Incident.create({
-      type_id: typeId,
-      severity: sev,
-      description: cleanDescription,
-      checkpoint_id: checkpointId,
-      created_by,
-      is_verified: false,
-      status: "OPEN",
-    });
+    const incident = await insertIncident({ typeId, sev, cleanDescription, checkpointId, created_by });
 
     return res.status(201).json({
       success: true,
@@ -87,7 +80,6 @@ const createIncident = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating incident:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to create incident",
@@ -121,9 +113,8 @@ const getIncidents = async (req, res) => {
   try {
     const where = {};
 
-    const allowedSeverity = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
     if (severity) {
-      if (!allowedSeverity.includes(severity)) {
+      if (!isValidSeverity(severity)) {
         return res.status(400).json({
           success: false,
           message: "Invalid severity value",
@@ -135,7 +126,7 @@ const getIncidents = async (req, res) => {
 
     if (req.query.checkpoint_id !== undefined) {
       const checkpointId = Number(req.query.checkpoint_id);
-      if (!Number.isInteger(checkpointId) || checkpointId <= 0) {
+      if (!isValidId(checkpointId)) {
         return res.status(400).json({
           success: false,
           message: "Invalid checkpoint_id",
@@ -146,7 +137,7 @@ const getIncidents = async (req, res) => {
     }
 
     if (type_id !== null) {
-      if (!Number.isInteger(type_id) || type_id <= 0) {
+      if (!isValidId(type_id)) {
         return res.status(400).json({
           success: false,
           message: "Invalid type_id",
@@ -168,9 +159,8 @@ const getIncidents = async (req, res) => {
       }
     }
 
-    const allowedStatus = ["OPEN", "CLOSED"];
     if (status) {
-      if (!allowedStatus.includes(status)) {
+      if (!isValidIncidentStatus(status)) {
         return res.status(400).json({
           success: false,
           message: "Invalid status value",
@@ -180,12 +170,7 @@ const getIncidents = async (req, res) => {
       where.status = status;
     }
 
-    const { count, rows: incidents } = await Incident.findAndCountAll({
-      where,
-      limit,
-      offset,
-      order: [[sortBy, sortOrder]],
-    });
+    const { count, rows: incidents } = await fetchIncidents({ where, limit, offset, sortBy, sortOrder });
 
     return res.status(200).json({
       success: true,
@@ -207,11 +192,14 @@ const getIncidents = async (req, res) => {
     });
   }
 };
+
+
+
 const updateIncident = async (req, res) => {
   try {
     const incidentId = Number(req.params.id);
 
-    if (!Number.isInteger(incidentId) || incidentId <= 0) {
+    if (!isValidId(incidentId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid incident ID",
@@ -219,7 +207,7 @@ const updateIncident = async (req, res) => {
       });
     }
 
-    const incident = await Incident.findByPk(incidentId);
+    const incident = await fetchIncidentById(incidentId);
 
     if (!incident) {
       return res.status(404).json({
@@ -248,20 +236,17 @@ const updateIncident = async (req, res) => {
 
     if (severity !== undefined) {
       const sev = String(severity).toUpperCase();
-      const allowedSeverity = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-
-      if (!allowedSeverity.includes(sev)) {
+      if (!isValidSeverity(sev)) {
         return res.status(400).json({
           success: false,
           message: "Invalid severity value",
           error: "Bad Request",
         });
       }
-
       updatedSeverity = sev;
     }
 
-    await incident.update({
+    const updated = await editIncident(incident, {
       type_id: type_id ?? incident.type_id,
       severity: updatedSeverity,
       description: description ?? incident.description,
@@ -271,7 +256,7 @@ const updateIncident = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Incident updated successfully",
-      data: incident,
+      data: updated,
     });
   } catch (error) {
     console.error("Error updating incident:", error);
@@ -287,7 +272,7 @@ const closeIncident = async (req, res) => {
   try {
     const incidentId = Number(req.params.id);
 
-    if (!Number.isInteger(incidentId) || incidentId <= 0) {
+    if (!isValidId(incidentId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid incident ID",
@@ -295,15 +280,7 @@ const closeIncident = async (req, res) => {
       });
     }
 
-    if (!req.user?.user_id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-        error: "User authentication required",
-      });
-    }
-
-    const incident = await Incident.findByPk(incidentId);
+    const incident = await fetchIncidentById(incidentId);
 
     if (!incident) {
       return res.status(404).json({
@@ -321,16 +298,13 @@ const closeIncident = async (req, res) => {
       });
     }
 
-    await incident.update({
-      status: "CLOSED",
-      closed_by: req.user.user_id,
-      closed_at: new Date(),
-    });
+
+    const closed = await closeIncidentById(incident, req.user.user_id);
 
     return res.status(200).json({
       success: true,
       message: "Incident closed successfully",
-      data: incident,
+      data: closed,
     });
   } catch (error) {
     console.error("Error closing incident:", error);
@@ -341,11 +315,12 @@ const closeIncident = async (req, res) => {
     });
   }
 };
+
 const verifyIncident = async (req, res) => {
   try {
     const incidentId = Number(req.params.id);
 
-    if (!Number.isInteger(incidentId) || incidentId <= 0) {
+    if (!isValidId(incidentId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid incident ID",
@@ -353,15 +328,7 @@ const verifyIncident = async (req, res) => {
       });
     }
 
-    if (!req.user?.user_id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-        error: "User authentication required",
-      });
-    }
-
-    const incident = await Incident.findByPk(incidentId);
+    const incident = await fetchIncidentById(incidentId);
 
     if (!incident) {
       return res.status(404).json({
@@ -387,16 +354,12 @@ const verifyIncident = async (req, res) => {
       });
     }
 
-    await incident.update({
-      is_verified: true,
-      verified_by: req.user.user_id,
-      verified_at: new Date(),
-    });
+    const verified = await verifyIncidentById(incident, req.user.user_id);
 
     return res.status(200).json({
       success: true,
       message: "Incident verified successfully",
-      data: incident,
+      data: verified,
     });
   } catch (error) {
     console.error("Error verifying incident:", error);
@@ -408,14 +371,11 @@ const verifyIncident = async (req, res) => {
   }
 };
 
-
-
-
-
 module.exports = {
   createIncident,
   getIncidents,
+  
   updateIncident,
   closeIncident,
-  verifyIncident
+  verifyIncident,
 };

@@ -1,201 +1,227 @@
-const db = require("../config/db");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const {
+  findUserByEmailOrPhone,
+  findRoleById,
+  insertUser,
+  findUserByEmail,
+  comparePassword,
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  saveRefreshToken,
+  findRefreshToken,
+  deleteRefreshToken,
+} = require("../services/userService");
 
+const { isValidEmail, isValidPhone } = require("../utils/validators");
 
 const signupUser = async (req, res) => {
   try {
-    
-    const { name, email, password, phone_number,  role_id } = req.body;
+    const { name, email, password, phone_number } = req.body;
+   
+    const finalRoleId = 3;
 
-    const finalPhone = phone_number
-
-    
-    if (!name || !email || !password || !finalPhone) {
-      return res.status(400).send({
+    if (!name || !email || !password || !phone_number) {
+      return res.status(400).json({
         success: false,
         message: "name, email, password, phone_number are required",
-        error: "Bad Request"
+        error: "Bad Request",
       });
     }
 
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).send({
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
         success: false,
         message: "Invalid email format",
-        error: "Bad Request"
+        error: "Bad Request",
       });
     }
 
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(finalPhone)) {
-      return res.status(400).send({
+    if (!isValidPhone(phone_number)) {
+      return res.status(400).json({
         success: false,
         message: "Invalid phone number format",
-        error: "Bad Request"
+        error: "Bad Request",
       });
     }
 
- 
-    const [exists] = await db.query(
-      "SELECT user_id FROM users WHERE email = ? OR phone_number = ?",
-      [email, finalPhone]
-    );
+    const exists = await findUserByEmailOrPhone(email, phone_number);
     if (exists.length > 0) {
-      return res.status(409).send({
+      return res.status(409).json({
         success: false,
         message: "Email or phone already in use",
-        error: "Conflict"
+        error: "Conflict",
       });
     }
 
-
-    const password_hash = await bcrypt.hash(password, 10);
-
-
-    const finalRoleId = role_id ?? 3;
+    const result = await insertUser({
+      name,
+      email,
+      password,
+      phone: phone_number,
+      roleId: finalRoleId,
+    });
 
   
-    const [roleCheck] = await db.query(
-      "SELECT role_id FROM roles WHERE role_id = ?",
-      [finalRoleId]
-    );
-
-    if (roleCheck.length === 0) {
-      return res.status(400).send({
-        success: false,
-        message: "Invalid role_id",
-        error: "Bad Request"
-      });
-    }
-
-   
-    const [result] = await db.query(
-      "INSERT INTO users (name, email, password, phone_number, role_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
-      [name, email, password_hash, finalPhone, finalRoleId]
-    );
-
-    return res.status(200).send({
+    return res.status(201).json({
       success: true,
       message: "User created successfully",
       data: {
         user_id: result.insertId,
         name,
         email,
-        phone_number: finalPhone,
+        phone_number,
         role_id: finalRoleId,
       },
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).send({
+    console.error(error);
+    return res.status(500).json({
       success: false,
-      message: "Error in create user",
-      error: error.message,
+      message: "Error creating user",
+      error: "Internal Server Error",
     });
   }
 };
-
-
 
 const signinUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Email and password are required",
-        error: "Bad Request"
+        error: "Bad Request",
       });
     }
 
-    const [rows] = await db.query(
-      "SELECT * FROM users WHERE email = ?",
-      [email]
-    );
+    const rows = await findUserByEmail(email);
 
     if (rows.length === 0) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Invalid email or password",
-        error: "Unauthorized"
+        error: "Unauthorized",
       });
     }
 
     const user = rows[0];
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await comparePassword(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Invalid email or password",
-        error: "Unauthorized"
+        error: "Unauthorized",
       });
     }
 
-    const accessToken = jwt.sign(
-      { user_id: user.user_id, role: user.role_id },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
-    );
+    const accessToken = signAccessToken({ user_id: user.user_id, role: user.role_id });
+    const refreshToken = signRefreshToken({ user_id: user.user_id, role: user.role_id });
 
-    const refreshToken = jwt.sign(
-      { user_id: user.user_id, role: user.role_id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
+    // ✅ حفظ الـ refresh token في الـ DB
+    await saveRefreshToken(user.user_id, refreshToken);
 
     return res.status(200).json({
       success: true,
-      accessToken,
-      refreshToken
+      message: "Login successful",
+      data: {
+        accessToken,
+        refreshToken,
+      },
     });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Error in login"
+      message: "Error in login",
+      error: "Internal Server Error",
     });
   }
 };
 
-const refreshAccessToken = (req, res) => {
+const refreshAccessToken = async (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
-    return res.status(400).json({ success: false, message: "Error refreshing access token",error: "Refresh token required" });
+    return res.status(400).json({
+      success: false,
+      message: "Refresh token required",
+      error: "Bad Request",
+    });
   }
 
   try {
-    const decoded = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET
-    );
+    // ✅ أولاً تحقق إنه valid توكن
+    const decoded = verifyRefreshToken(refreshToken);
 
-    const newAccessToken = jwt.sign(
-      { user_id: decoded.user_id, role: decoded.role },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
-    );
+    // ✅ ثانياً تحقق إنه موجود في الـ DB (مش ملغي أو منسرق)
+    const tokenInDb = await findRefreshToken(refreshToken);
+    if (!tokenInDb) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is invalid or revoked",
+        error: "Unauthorized",
+      });
+    }
 
-    res.status(200).json({
+    const newAccessToken = signAccessToken({ user_id: decoded.user_id, role: decoded.role });
+
+    return res.status(200).json({
       success: true,
       message: "Access token refreshed successfully",
-      accessToken: newAccessToken,
+      data: {
+        accessToken: newAccessToken,
+      },
     });
-
   } catch (err) {
-    return res.status(401).json({success: false, message: "Error refreshing access token", error: "Invalid or expired refresh token" });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired refresh token",
+      error: "Unauthorized",
+    });
+  }
+};
+
+
+const logoutUser = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({
+      success: false,
+      message: "Refresh token required",
+      error: "Bad Request",
+    });
+  }
+
+  if (! typeof refreshToken !== "string") {
+  return res.status(400).json({
+    success: false,
+    message: "Valid refresh token required",
+    error: "Bad Request",
+  });
+}
+  try {
+    await deleteRefreshToken(refreshToken);
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error during logout",
+      error: "Internal Server Error",
+    });
   }
 };
 
 module.exports = {
   signupUser,
   signinUser,
-  refreshAccessToken
+  refreshAccessToken,
+  logoutUser,
 };
