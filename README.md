@@ -80,7 +80,7 @@ GET /api/v1/reports
 
 Full project documentation (Architecture, Database, API, Testing, etc.) is available in the Wiki:
 
-👉 [Project Wiki](../../wiki)
+👉 https://github.com/sondosalqu/WaselPalestine-/wiki
 
 ---
 
