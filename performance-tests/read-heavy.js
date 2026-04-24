@@ -17,7 +17,7 @@ export default function () {
     report_lng: 35.2,
   });
 
-  const res = http.post(`${BASE_URL}/api/v1/reports`, payload, {
+  const res = http.get(`${BASE_URL}/api/v1/getReports`, payload, {
     headers: {
       Authorization: `Bearer ${TOKEN}`,
       "Content-Type": "application/json",
