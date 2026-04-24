@@ -224,18 +224,47 @@ Performance testing was implemented using **k6**.
 
 | Test Type   | Avg Response | p95      | Throughput  | Error |
 | ----------- | ------------ | -------- | ----------- | ----- |
-| Read-heavy  | 13.88 ms     | 26.43 ms | 35.81 req/s | 0%    |
+| Read-heavy  | 9.16 ms      | 16.38 ms | 19.78 req/s | 0%    |
 | Write-heavy | 717.93 ms    | 1.97 s   | 13.91 req/s | 0%    |
 | Mixed       | 374.57 ms    | 1.15 s   | 36.27 req/s | 0%    |
 | Spike       | 15.77 ms     | 33.33 ms | 52.56 req/s | 0%    |
 | Soak        | 17.26 ms     | 30.94 ms | 9.89 req/s  | 0%    |
 
+### Sample k6 Output
+
+✔ checks_succeeded: 100% (1200/1200)
+✖ checks_failed: 0%
+
+http_req_duration:
+- avg: 9.16 ms
+- p95: 16.38 ms
+- max: 52.08 ms
+
+http_req_failed: 0%
+
 ### Key Insights
 
-* Read operations are very fast
+* Read operations achieved sub-10ms average latency under load
 * Write operations slower due to DB
 * System stable under load
 * Zero failed requests
+
+### Test Configuration
+
+- Virtual Users (VUs): 20
+- Duration: 1 minute
+- Scenario: Read-heavy (looping requests)
+  
+### Analysis
+
+The read-heavy scenario shows excellent performance:
+
+- Very low latency (~9 ms average)
+- Stable response times (low variance)
+- Zero failed requests
+- System handles concurrent users efficiently
+
+This indicates that read endpoints are highly optimized and suitable for real-time usage.
 
 ---
 
