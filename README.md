@@ -71,7 +71,20 @@ Base URL:
 ```bash
 /api/v1/
 ```
+## 🧠 API Design Rationale
 
+The API follows RESTful principles to ensure scalability and maintainability.
+
+- Versioning (/api/v1) enables backward compatibility
+- Resource-based endpoints improve clarity
+- HTTP methods used correctly:
+  - GET → fetch data
+  - POST → create resources
+  - PATCH → partial updates
+  - DELETE → remove resources
+- Separation between resources and actions improves design clarity
+
+  
 ### Example Endpoints
 
 #### Reports
@@ -107,10 +120,23 @@ Base URL:
 
 ---
 
-## 🌍 External APIs
+## 🌍 External API Integration Details
 
-* OpenStreetMap → routing & geolocation
-* OpenWeather → weather data
+### OpenStreetMap
+Used for route estimation and geolocation.
+
+Handled:
+- Request timeouts
+- Error handling (fallback responses)
+- Data transformation into internal format
+
+### OpenWeather API
+Used to enhance incident context based on weather.
+
+Handled:
+- API authentication
+- Rate limiting protection
+- Basic caching to reduce repeated calls
 
 ---
 
@@ -124,60 +150,88 @@ All APIs documented using **API-Dog**:
 
 ---
 
-## ⚡ Performance Testing (k6)
+## ⚡ Performance & Load Testing (k6)
 
-### Test Configuration
+### Test Scenarios
 
-* Virtual Users (VUs): 20
-* Duration: 1 minute
-* Scenario: Read-heavy
-
----
-
-### Results
-
-| Test Type  | Avg Response | p95      | Throughput  | Error |
-| ---------- | ------------ | -------- | ----------- | ----- |
-| Read-heavy | 9.16 ms      | 16.38 ms | 19.78 req/s | 0%    |
+| Scenario | Load | Duration |
+|---|---|---|
+| Read-heavy | 20 VUs | 1 min |
+| Write-heavy | 40 VUs | 5 min |
+| Mixed | 50 VUs | 5 min |
+| Spike | 100 VUs | 3 min |
+| Soak | 20 VUs | 15 min |
 
 ---
 
-### Sample Output
+### Results Summary
 
-✔ checks_succeeded: 100% (1200/1200)
-✖ checks_failed: 0%
-
-http_req_duration:
-
-* avg: 9.16 ms
-* p95: 16.38 ms
-* max: 52.08 ms
-
-http_req_failed: 0%
+| Scenario | Avg | p95 | Throughput | Error |
+|---|---|---|---|---|
+| Read-heavy | 7.41 ms | 14.52 ms | 19.77 req/s | 0% |
+| Mixed | 286 ms | 983 ms | 38.75 req/s | 0% |
+| Write-heavy | 137 ms | 99 ms | 20.95 req/s | 93.97% |
+| Spike | 7.62 ms | 17.98 ms | 53 req/s | 0% |
+| Soak | 5.69 ms | 13.81 ms | 9.96 req/s | 0% |
 
 ---
 
 ### Analysis
 
-* Sub-10ms average latency
-* Stable response times
-* Zero failed requests
-* Efficient under concurrent load
+Read-heavy, spike, and soak tests show excellent performance with low latency and zero errors.
+
+Mixed workload remains stable under concurrent operations.
+
+However, write-heavy testing shows a high failure rate.
 
 ---
 
-### Performance Justification
+### Root Cause Analysis
 
-The strong performance results are influenced by:
-
-* Layered architecture separation
-* Optimized queries (Sequelize + raw SQL)
-* Pagination & filtering
-
-This contributed to low latency and high stability.
+- Duplicate detection rejects repeated requests
+- k6 uses identical payloads
+- High concurrent insert operations
 
 ---
 
+### Bottlenecks
+
+- Database writes are expensive
+- Duplicate detection adds overhead
+- No unique payload generation in testing
+
+---
+
+### Improvements
+
+- Generate dynamic test data
+- Add indexing on frequently used columns
+- Optimize duplicate detection queries
+- Introduce caching for external APIs
+
+---
+
+### Before / After
+
+Initial testing showed high failure in write-heavy scenarios.
+
+Analysis identified duplicate handling as the main issue.
+
+Future optimizations are expected to reduce error rates significantly.
+---
+## 🧪 Testing Strategy
+
+The system was tested using multiple approaches:
+
+- API-Dog → manual endpoint testing
+- Authentication testing → JWT validation
+- Role-based testing → access control verification
+- Input validation testing → invalid and edge cases
+- Performance testing → k6 load testing
+
+Each endpoint was validated for correctness, security, and stability.
+
+---
 ## 🐳 Deployment
 
 ```bash
