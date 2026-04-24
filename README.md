@@ -345,6 +345,7 @@ The main bottleneck was database write operations, especially report creation an
 Before optimization, write operations were slower and less structured under load.
 After optimization, the system showed stable performance with zero failed requests during k6 testing.
 
+--
 ## API-Dog Documentation
 
 The API documentation was created using API-Dog and includes:
