@@ -1,4 +1,4 @@
-// middleware/authorizeRoles.js
+
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     try {

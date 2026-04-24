@@ -6,7 +6,7 @@ const {
   DuplicateReportItem,
 } = require("../models");
 
-// Helpers
+
 function toNumberOrNull(v) {
   if (v === undefined || v === null || v === "") return null;
   const n = Number(v);
@@ -65,7 +65,7 @@ async function attachReportsToDuplicateGroup(existingReportId, newReportId) {
   return groupId;
 }
 
-// GET /api/v1/reports
+
 const getReports = async (req, res) => {
   try {
     const include = [];
@@ -106,9 +106,8 @@ const getReports = async (req, res) => {
   }
 };
 
-// GET /api/v1/reports/:id
 const getReportById = async (req, res) => {
-  console.log("✅ getReportById hit:", req.params.id);
+
   try {
     const reportId = Number(req.params.id);
 
@@ -162,9 +161,9 @@ const getReportById = async (req, res) => {
   }
 };
 
-// POST /api/v1/reports
+
 const createReport = async (req, res) => {
-  console.log("✅ NEW createReport version is running");
+
   try {
     const { checkpoint_id, category, description, report_lat, report_lng } = req.body;
 

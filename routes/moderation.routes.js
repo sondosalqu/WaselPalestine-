@@ -7,6 +7,7 @@ console.log("moderation.routes.js loaded");
 const { requireAuth } = require("../middleware/auth");
 const { authorizeRoles } = require("../middleware/authorizeRoles");
 const {
+  
   verifyReport,
   rejectReport,
   closeReport,
@@ -24,12 +25,6 @@ router.patch("/reports/:id/mark-duplicate", requireAuth, authorizeRoles(1, 2), m
 router.get("/reports/pending", requireAuth, authorizeRoles(1, 2), getPendingReports);
 router.get("/reports/:id/moderation-actions", requireAuth, authorizeRoles(1, 2), getModerationActionsByReport);
 
-// test route
-//router.get("/moderation-test", (req, res) => {
- // res.json({ success: true, message: "moderation routes working" });
-//});
 
-router.get("/moderation-test", (req, res) => {
-  res.json({ ok: true, where: "moderation.routes.js" });
-});
+
 module.exports = router;
