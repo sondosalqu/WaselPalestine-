@@ -1,4 +1,4 @@
-// services/incidentService.js
+
 const db = require("../config/db.js");
 const { Incident } = require("../models");
 

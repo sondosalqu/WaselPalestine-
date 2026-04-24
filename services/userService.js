@@ -42,7 +42,7 @@ const signRefreshToken = (payload) =>
 const verifyRefreshToken = (token) =>
   jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
-// ✅ حفظ الـ refresh token في الـ DB
+
 const saveRefreshToken = async (userId, token) => {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   await db.query(
@@ -51,7 +51,6 @@ const saveRefreshToken = async (userId, token) => {
   );
 };
 
-// ✅ التحقق إن الـ refresh token موجود في الـ DB
 const findRefreshToken = async (token) => {
   const [rows] = await db.query(
     "SELECT * FROM refresh_tokens WHERE token = ? AND expires_at > NOW()",
@@ -60,12 +59,12 @@ const findRefreshToken = async (token) => {
   return rows[0] || null;
 };
 
-// ✅ حذف الـ refresh token عند الـ logout
+
 const deleteRefreshToken = async (token) => {
   await db.query("DELETE FROM refresh_tokens WHERE token = ?", [token]);
 };
 
-// ✅ حذف كل tokens اليوزر عند الـ logout من كل الأجهزة
+
 const deleteAllRefreshTokensByUser = async (userId) => {
   await db.query("DELETE FROM refresh_tokens WHERE user_id = ?", [userId]);
 };
