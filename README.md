@@ -322,6 +322,35 @@ ORS_BASE_URL=https://api.openrouteservice.org
 * GitHub used for collaboration
 
 ---
+## Performance Analysis
+
+### Observed Limitations
+Write-heavy operations were slower than read-heavy operations because they require database insertions, validation, and authentication checks.
+
+### Root Causes
+The main bottleneck was database write operations, especially report creation and related validation logic.
+
+### Optimizations Applied
+- Added pagination for list endpoints.
+- Used filtering and sorting to reduce unnecessary data retrieval.
+- Separated controller, service, and repository layers for maintainability.
+- Used Docker to ensure consistent deployment.
+
+### Before / After Comparison
+Before optimization, write operations were slower and less structured under load.
+After optimization, the system showed stable performance with zero failed requests during k6 testing.
+
+## API-Dog Documentation
+
+The API documentation was created using API-Dog and includes:
+- Endpoint descriptions
+- Authentication flows
+- Request schemas
+- Response schemas
+- Error formats
+- Test execution results
+
+The API-Dog collection export and environment configuration are included in the documentation folder.
 
 ## 👥 Team Members
 
