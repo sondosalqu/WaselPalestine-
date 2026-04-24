@@ -291,10 +291,9 @@ http://localhost:3000/test
 ### Environment Variables
 
 Create a .env file in the root directory and add:
-
 DB_NAME=myDB
 DB_USER=root
-DB_PASSWORD=123123
+DB_PASSWORD=your_db_password
 
 DB_HOST=localhost
 DB_PORT=3306
@@ -313,6 +312,12 @@ OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
 
 ORS_API_KEY=your_openrouteservice_api_key
 ORS_BASE_URL=https://api.openrouteservice.org
+
+⚠️ Note:
+Sensitive values such as API keys and JWT secrets are not included for security reasons.
+Developers should provide their own values in the .env file.
+
+
 
 ## 🔁 Version Control Workflow
 
