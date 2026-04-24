@@ -12,7 +12,7 @@ The platform aggregates data and exposes it through versioned APIs that can be c
 
 * Node.js
 * Express.js
-* Relational Database (MySQL)
+* MySQL (Relational Database)
 * Sequelize ORM + Raw Queries
 * JWT Authentication (Access + Refresh Tokens)
 * OpenStreetMap API
@@ -30,7 +30,7 @@ The system follows a **layered architecture**:
 * **Controller Layer** → Handles HTTP requests and responses
 * **Service Layer** → Contains business logic
 * **Repository Layer** → Handles database operations
-* **External Services Layer** → Integrates with APIs (OpenStreetMap, Weather)
+* **External Services Layer** → Integrates with APIs
 
 ### Why this architecture?
 
@@ -43,34 +43,16 @@ The system follows a **layered architecture**:
 
 ## 🗄️ Database Design
 
-The system uses a relational database designed to support reporting, moderation, routing, and alerts.
-
 ### Core Entities
 
-* User
-* Role
-* Report
-* Duplicate Report
-* Moderation Actions
-* Checkpoints
-* Status History
-* Incidents
-* Type
-* Route Request
-* Route Result
-* Route Constraint Type
-* Route Request Constraint
-* Alert Subscription
-* Alert Record
-* Area
+User, Role, Report, Duplicate Report, Moderation Actions, Checkpoints, Status History, Incidents, Type, Route Request, Route Result, Route Constraint Type, Route Request Constraint, Alert Subscription, Alert Record, Area
 
 ### Key Features
 
 * Users can create reports
-* Reports can be voted on
-* Duplicate detection supported
-* Moderation actions are auditable
-* Checkpoints maintain history
+* Reports support voting and duplication detection
+* Moderation actions are fully tracked
+* Checkpoints maintain historical status
 * Routes support constraints
 * Alerts triggered by incidents
 
@@ -78,222 +60,136 @@ The system uses a relational database designed to support reporting, moderation,
 
 ## 📊 Database ERD
 
-The following diagram represents the database schema, showing all entities, relationships, and constraints used in the system.
-
-The design supports core functionalities such as:
-- User management and authentication
-- Report creation, voting, and moderation
-- Incident tracking and verification
-- Checkpoint status history
-- Route estimation with constraints
-- Alert and subscription system
-
 ![Database ERD](./docs/a1.png)
 
 ---
 
 ## 🔗 API Design
 
-All endpoints follow RESTful standards and are versioned:
+Base URL:
 
 ```bash
-/api/v1/...
+/api/v1/
 ```
 
 ### Example Endpoints
 
 #### Reports
-* `POST /api/v1/reports`
-* `GET /api/v1/reports`
-* `GET /api/v1/reports/:id`
-* `POST /api/v1/reports/:id/vote`
-* `DELETE /api/v1/reports/:id/vote`
-  
+
+* POST `/reports`
+* GET `/reports`
+* GET `/reports/:id`
+* POST `/reports/:id/vote`
+* DELETE `/reports/:id/vote`
+
 #### Moderation
-- `PATCH /api/v1/reports/{id}/verify` → verify report
-- `PATCH /api/v1/reports/{id}/reject` → reject report
-- `PATCH /api/v1/reports/{id}/close` → close report
-- `PATCH /api/v1/reports/{id}/mark-duplicate` → mark report as duplicate
 
-- `GET /api/v1/reports/{id}/moderation-actions` → get moderation history for a report
-- `GET /api/v1/reports/pending` → get all pending reports
+* PATCH `/reports/{id}/verify`
+* PATCH `/reports/{id}/reject`
+* PATCH `/reports/{id}/close`
+* PATCH `/reports/{id}/mark-duplicate`
 
-#### Incidents
-- POST /api/v1/incidents
-- GET /api/v1/incidents
-- PUT /api/v1/incidents/:id
-- PATCH /api/v1/incidents/:id/close
-- PATCH /api/v1/incidents/:id/verify
-
-#### Users Authentication
-- POST /api/v1/users/signup
-- POST /api/v1/users/signin
-- POST /api/v1/users/refresh
-- POST /api/v1/users/logout
-  
 #### Routes
-- `POST /api/v1/routes/estimate` → create route request (origin, destination, constraints)
-- `POST /api/v1/routes/{route_req_id}/calculate` → calculate route result
-- `GET /api/v1/routes/{route_req_id}` → get route details
-- `GET /api/v1/routes` → get route history (with pagination)
 
-#### Alerts
-- `POST /api/v1/alerts/subscriptions` → create alert subscription
-- `GET /api/v1/alerts/subscriptions` → get user subscriptions
-- `GET /api/v1/alerts/alerts` → get user alerts
-- `PATCH /api/v1/alerts/alerts/:id/read` → mark alert as read
-- `PATCH /api/v1/alerts/subscriptions/:id` → deactivate alert subscription
-
-#### Checkpoints
-- `GET /api/v1/checkpoints` → get all checkpoints (with filtering, sorting, pagination)
-- `GET /api/v1/checkpoints/{id}` → get checkpoint by ID
-- `POST /api/v1/checkpoints` → create new checkpoint
-- `PUT /api/v1/checkpoints/{id}` → update checkpoint details
-- `PATCH /api/v1/checkpoints/{id}/status` → update checkpoint status (OPEN / CLOSED)
-
-  
-### API Design Rationale
-
-* RESTful structure ensures simplicity and consistency
-* Versioning (`/api/v1`) supports future updates
-* Clear separation between resources
-* Supports filtering, sorting, and pagination
+* POST `/routes/estimate`
+* POST `/routes/{id}/calculate`
+* GET `/routes/{id}`
 
 ---
 
 ## 🔐 Authentication & Security
 
-The system uses **JWT Authentication**:
-
-* Access Token
-* Refresh Token
-
-### Features
-
-* Secure endpoints
-* Role-based access (admin / moderator / user)
+* JWT (Access + Refresh Tokens)
+* Role-based access control
 * Password hashing (bcrypt)
-* Token expiration handling
+* Input validation & error handling
 * CORS enabled
-* Input validation and error handling
 
 ---
 
-## 🌍 External API Integration
+## 🌍 External APIs
 
-The system integrates with:
-
-* **OpenStreetMap API** → routing & geolocation
-* **OpenWeather API** → weather data
-
-### Handling Challenges
-
-* API authentication
-* Rate limiting
-* Timeout handling
-* Data transformation and integration
+* OpenStreetMap → routing & geolocation
+* OpenWeather → weather data
 
 ---
 
-## 🧪 API Documentation & Testing
+## 🧪 API Documentation
 
-All APIs are documented and tested using **API-Dog**.
+All APIs documented using **API-Dog**:
 
-Includes:
-
-* Endpoint definitions
 * Request/response schemas
-* Authentication setup
-* Test cases
+* Auth flows
+* Testing scenarios
 
 ---
 
-## ⚡ Performance Testing with k6
+## ⚡ Performance Testing (k6)
 
-Performance testing was implemented using **k6**.
+### Test Configuration
 
-### Scenarios
+* Virtual Users (VUs): 20
+* Duration: 1 minute
+* Scenario: Read-heavy
 
-* Read-heavy
-* Write-heavy
-* Mixed
-* Spike
-* Soak
+---
 
-### Summary Results
+### Results
 
-| Test Type   | Avg Response | p95      | Throughput  | Error |
-| ----------- | ------------ | -------- | ----------- | ----- |
-| Read-heavy  | 9.16 ms      | 16.38 ms | 19.78 req/s | 0%    |
-| Write-heavy | 717.93 ms    | 1.97 s   | 13.91 req/s | 0%    |
-| Mixed       | 374.57 ms    | 1.15 s   | 36.27 req/s | 0%    |
-| Spike       | 15.77 ms     | 33.33 ms | 52.56 req/s | 0%    |
-| Soak        | 17.26 ms     | 30.94 ms | 9.89 req/s  | 0%    |
+| Test Type  | Avg Response | p95      | Throughput  | Error |
+| ---------- | ------------ | -------- | ----------- | ----- |
+| Read-heavy | 9.16 ms      | 16.38 ms | 19.78 req/s | 0%    |
 
-### Sample k6 Output
+---
+
+### Sample Output
 
 ✔ checks_succeeded: 100% (1200/1200)
 ✖ checks_failed: 0%
 
 http_req_duration:
-- avg: 9.16 ms
-- p95: 16.38 ms
-- max: 52.08 ms
+
+* avg: 9.16 ms
+* p95: 16.38 ms
+* max: 52.08 ms
 
 http_req_failed: 0%
 
-### Key Insights
+---
 
-* Read operations achieved sub-10ms average latency under load
-* Write operations slower due to DB
-* System stable under load
-* Zero failed requests
-
-### Test Configuration
-
-- Virtual Users (VUs): 20
-- Duration: 1 minute
-- Scenario: Read-heavy (looping requests)
-  
 ### Analysis
 
-The read-heavy scenario shows excellent performance:
-
-- Very low latency (~9 ms average)
-- Stable response times (low variance)
-- Zero failed requests
-- System handles concurrent users efficiently
-
-This indicates that read endpoints are highly optimized and suitable for real-time usage.
+* Sub-10ms average latency
+* Stable response times
+* Zero failed requests
+* Efficient under concurrent load
 
 ---
 
-## 🐳 Deployment with Docker
+### Performance Justification
 
-The system is fully containerized using Docker.
+The strong performance results are influenced by:
 
-### Run with Docker
+* Layered architecture separation
+* Optimized queries (Sequelize + raw SQL)
+* Pagination & filtering
+
+This contributed to low latency and high stability.
+
+---
+
+## 🐳 Deployment
 
 ```bash
 docker compose up --build
 ```
 
-### Services
-
-* App → http://localhost:3000
-* Database → MySQL inside Docker
-
-### Notes
-
-* DB connection uses retry mechanism
-* Docker ensures consistent environment
-* Easy deployment and scalability
+* App: http://localhost:3000
+* Database: MySQL (Docker)
 
 ---
 
-## ⚙️ Installation & Running
-
-### Option 1: Local
+## ⚙️ Run Locally
 
 ```bash
 git clone https://github.com/sondosalqu/WaselPalestine-.git
@@ -304,90 +200,35 @@ npm run dev
 
 ---
 
-### Option 2: Docker
+## ⚙️ Environment Variables
 
-```bash
-docker compose up --build
-```
+Create `.env` file:
 
-Test:
-
-```
-http://localhost:3000/test
-```
-
----
-### Environment Variables
-
-Create a .env file in the root directory and add:
+```env
 DB_NAME=myDB
 DB_USER=root
 DB_PASSWORD=your_db_password
 
 DB_HOST=localhost
 DB_PORT=3306
-NODE_ENV=development
 
 PORT=3000
 
 JWT_ACCESS_SECRET=your_access_secret
 JWT_REFRESH_SECRET=your_refresh_secret
-ACCESS_TOKEN_EXPIRES=15m
-REFRESH_TOKEN_EXPIRES=7d
-BCRYPT_SALT_ROUNDS=10
-
-OPENWEATHER_API_KEY=your_openweather_api_key
-OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
-
-ORS_API_KEY=your_openrouteservice_api_key
-ORS_BASE_URL=https://api.openrouteservice.org
-
-⚠️ Note:
-Sensitive values such as API keys and JWT secrets are not included for security reasons.
-Developers should provide their own values in the .env file.
-
-
-
-## 🔁 Version Control Workflow
-
-* Feature branches used
-* Pull requests for merging
-* Meaningful commit messages
-* GitHub used for collaboration
+```
 
 ---
-## Performance Analysis
 
-### Observed Limitations
-Write-heavy operations were slower than read-heavy operations because they require database insertions, validation, and authentication checks.
+## 🔁 Workflow
 
-### Root Causes
-The main bottleneck was database write operations, especially report creation and related validation logic.
+* Feature branches
+* Pull requests
+* Clean commit messages
 
-### Optimizations Applied
-- Added pagination for list endpoints.
-- Used filtering and sorting to reduce unnecessary data retrieval.
-- Separated controller, service, and repository layers for maintainability.
-- Used Docker to ensure consistent deployment.
+---
 
-### Before / After Comparison
-Before optimization, write operations were slower and less structured under load.
-After optimization, the system showed stable performance with zero failed requests during k6 testing.
-
---
-## API-Dog Documentation
-
-The API documentation was created using API-Dog and includes:
-- Endpoint descriptions
-- Authentication flows
-- Request schemas
-- Response schemas
-- Error formats
-- Test execution results
-
-The API-Dog collection export and environment configuration are included in the documentation folder.
-
-## 👥 Team Members
+## 👥 Team
 
 * Sondos Alqotob
 * Maiar Obeid
@@ -395,6 +236,15 @@ The API-Dog collection export and environment configuration are included in the 
 
 ---
 
-## 📌 Project Notes
+## 📌 Notes
 
-This project was developed as part of the Advanced Software Engineering course. It demonstrates backend system design including API architecture, database modeling, authentication, external integrations, performance optimization, and containerized deployment.
+This project demonstrates backend system design including:
+
+* API architecture
+* Database modeling
+* Authentication
+* External integrations
+* Performance optimization
+* Containerized deployment
+
+---
