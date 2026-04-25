@@ -147,7 +147,6 @@ Handled:
 * Role-based access control
 * Password hashing (bcrypt)
 * Input validation & error handling
-* CORS enabled
 
 
 ---
