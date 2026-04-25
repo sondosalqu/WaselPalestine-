@@ -46,7 +46,7 @@ The system follows a layered architecture:
 - **Middleware layer** → Handles auth, validation, and logging
 - **Controller layer** → Handles HTTP requests and sends responses
 - **Service layer** → Contains business logic
-  - **External Services** → Integrates with third-party APIs
+- **External Services** → Integrates with third-party APIs
 - **Model layer** → Handles database schema and queries (via SQLite)
 
 **Why this architecture?**
