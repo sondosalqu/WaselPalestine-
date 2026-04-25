@@ -101,7 +101,30 @@ The API follows RESTful principles to ensure scalability and maintainability.
 
   
 ### Example Endpoints
+### Checkpoints
 
+* GET `/checkpoints` — List all checkpoints
+* GET `/checkpoints/:id` — Get checkpoint details
+* POST `/checkpoints` — Create checkpoint (Admin/Moderator)
+* PUT `/checkpoints/:id` — Update checkpoint
+* DELETE `/checkpoints/:id` — Delete checkpoint
+
+### Checkpoint Status History
+
+* GET `/checkpoints/:id/status-history` — Get checkpoint history
+* POST `/checkpoints/:id/status-history` — Add status update
+
+### Incidents
+
+* GET `/incidents` — List incidents with filtering, sorting, pagination
+* GET `/incidents/:id` — Get incident details
+* POST `/incidents` — Create incident
+* PATCH `/incidents/:id/verify`
+* PATCH `/incidents/:id/close`
+
+Example:
+```bash
+GET /api/v1/incidents?type=closure&severity=high&sort=createdAt&page=1&limit=10
 #### Reports
 
 * POST `/reports`
@@ -285,6 +308,12 @@ PORT=3000
 
 JWT_ACCESS_SECRET=your_access_secret
 JWT_REFRESH_SECRET=your_refresh_secret
+
+OPENWEATHER_API_KEY=your_openweather_api_key
+OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
+
+OSM_BASE_URL=https://router.project-osrm.org
+NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
 ```
 
 ---
