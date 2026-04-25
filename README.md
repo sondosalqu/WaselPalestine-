@@ -15,7 +15,7 @@ The platform aggregates data and exposes it through versioned APIs that can be c
 * MySQL (Relational Database)
 * Sequelize ORM + Raw Queries
 * JWT Authentication (Access + Refresh Tokens)
-* OpenStreetMap API
+* OpenRouteService API (for routing)
 * OpenWeather API
 * API-Dog (API Documentation & Testing)
 * k6 (Performance & Load Testing)
@@ -123,22 +123,49 @@ The API follows RESTful principles to ensure scalability and maintainability.
 ---
 ## 🌍 External API Integration Details
 
-### OpenStreetMap
-Used for route estimation and geolocation.
+### OpenRouteService
+Used for route estimation between two locations.
 
-Handled:
-- Request timeouts
-- Error handling (fallback responses)
-- Data transformation into internal format
+The system:
+- Sends origin and destination coordinates to the API
+- Receives:
+  - Distance (in kilometers)
+  - Duration (in minutes)
+- Applies caching (10 minutes) to reduce repeated requests
+- Handles:
+  - Request timeouts
+  - Rate limiting (HTTP 429)
+  - Authentication errors (401 / 403)
+  - Invalid responses
+- Transforms external API data into internal structured format
+
+---
 
 ### OpenWeather API
-Used to enhance incident context based on weather.
+Used to enhance route and incident context based on weather conditions.
 
-Handled:
-- API authentication
-- Rate limiting protection
-- Basic caching to reduce repeated calls
+The system:
+- Sends latitude and longitude to the API
+- Receives:
+  - Temperature
+  - Feels-like temperature
+  - Humidity
+  - Wind speed
+  - Weather description
+- Applies caching (10 minutes) to reduce repeated calls
+- Handles:
+  - API authentication
+  - Rate limiting (HTTP 429)
+  - Request timeouts
+  - Invalid responses
 
+---
+
+### 🔥 Integration Benefits
+- Improves route accuracy using real-time data
+- Adds contextual awareness using weather information
+- Reduces API load through caching
+- Ensures system reliability with robust error handling
 
 ---
 ## 🔐 Authentication & Security
