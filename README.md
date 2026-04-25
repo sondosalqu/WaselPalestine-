@@ -123,17 +123,6 @@ The API follows RESTful principles to ensure scalability and maintainability.
 * PATCH `/incidents/:id/close`
 
 ---
-
-## 🔐 Authentication & Security
-
-* JWT (Access + Refresh Tokens)
-* Role-based access control
-* Password hashing (bcrypt)
-* Input validation & error handling
-* CORS enabled
-
----
-
 ## 🌍 External API Integration Details
 
 ### OpenStreetMap
@@ -151,6 +140,17 @@ Handled:
 - API authentication
 - Rate limiting protection
 - Basic caching to reduce repeated calls
+
+
+---
+## 🔐 Authentication & Security
+
+* JWT (Access + Refresh Tokens)
+* Role-based access control
+* Password hashing (bcrypt)
+* Input validation & error handling
+* CORS enabled
+
 
 ---
 
