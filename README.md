@@ -38,21 +38,23 @@ The selected technology stack was chosen based on the following engineering cons
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-The system follows a **layered architecture**:
+The system follows a layered architecture:
 
-* **Controller Layer** → Handles HTTP requests and responses
-* **Service Layer** → Contains business logic
-* **Repository Layer** → Handles database operations
-* **External Services Layer** → Integrates with APIs
+- **Routes layer** → Maps HTTP endpoints to the correct controller
+- **Middleware layer** → Handles auth, validation, and logging
+- **Controller layer** → Handles HTTP requests and sends responses
+- **Service layer** → Contains business logic
+  - **External Services** → Integrates with third-party APIs
+- **Model layer** → Handles database schema and queries (via SQLite)
 
-### Why this architecture?
+**Why this architecture?**
 
-* Separation of concerns
-* Scalability
-* Maintainability
-* Easier testing and debugging
+- Separation of concerns
+- Scalability
+- Maintainability
+- Easier testing and debugging
 
 ---
 
