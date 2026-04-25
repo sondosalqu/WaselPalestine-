@@ -37,23 +37,22 @@ The selected technology stack was chosen based on the following engineering cons
 - **Database Reliability:** MySQL provides a robust relational database system with strong support for structured data, transactions, and data integrity.
 
 ---
-
 ## Architecture
 
 The system follows a layered architecture:
 
-- **Routes layer** → Maps HTTP endpoints to the correct controller
-- **Middleware layer** → Handles auth, validation, and logging
-- **Controller layer** → Handles HTTP requests and sends responses
-- **Service layer** → Contains business logic and external API
-- **Model layer** → Handles database schema and queries 
+- **Routes layer** → Maps HTTP endpoints to the correct controller  
+- **Middleware layer** → Handles authentication using JWT, authorization using role-based access control, and request validation  
+- **Controller layer** → Handles HTTP requests and sends responses  
+- **Service layer** → Contains business logic and integrates with external APIs  
+- **Model layer** → Handles database schema and queries using MySQL  
 
-**Why this architecture?**
+### Why this architecture?
 
-- Separation of concerns
-- Scalability
-- Maintainability
-- Easier testing and debugging
+- Separation of concerns  
+- Scalability  
+- Maintainability  
+- Easier testing and debugging  
   
 ## 🗄️ Database Design
 
