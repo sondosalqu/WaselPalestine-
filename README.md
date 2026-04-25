@@ -145,7 +145,36 @@ GET /api/v1/incidents?type=closure&severity=high&sort=createdAt&page=1&limit=10
 * POST `/routes/estimate`
 * POST `/routes/{id}/calculate`
 * GET `/routes/{id}`
+### Checkpoints
 
+* GET `/checkpoints`
+* GET `/checkpoints/:id`
+* POST `/checkpoints`
+* PUT `/checkpoints/:id`
+* DELETE `/checkpoints/:id`
+
+### Checkpoint Status History
+
+* GET `/checkpoints/:id/status-history`
+* POST `/checkpoints/:id/status-history`
+
+### Incidents
+
+* GET `/incidents`
+* GET `/incidents/:id`
+* POST `/incidents`
+* PATCH `/incidents/:id/verify`
+* PATCH `/incidents/:id/close`
+
+Example:
+GET /api/v1/incidents?type=closure&severity=high&sort=createdAt&page=1&limit=10
+
+### Alerts
+
+* POST `/alerts/subscribe`
+* GET `/alerts`
+* GET `/alerts/subscriptions`
+* DELETE `/alerts/subscriptions/:id`
 ---
 
 ## 🔐 Authentication & Security
@@ -314,7 +343,6 @@ OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
 
 OSM_BASE_URL=https://router.project-osrm.org
 NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org
-```
 
 ---
 
