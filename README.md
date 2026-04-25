@@ -45,8 +45,8 @@ The system follows a layered architecture:
 - **Routes layer** → Maps HTTP endpoints to the correct controller
 - **Middleware layer** → Handles auth, validation, and logging
 - **Controller layer** → Handles HTTP requests and sends responses
-- **Service layer** → Contains business logic and third-party API integrations
-- **Model layer** → Handles database schema and queries (via SQLite)
+- **Service layer** → Contains business logic and external API
+- **Model layer** → Handles database schema and queries 
 
 **Why this architecture?**
 
