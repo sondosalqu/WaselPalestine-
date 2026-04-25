@@ -22,6 +22,21 @@ The platform aggregates data and exposes it through versioned APIs that can be c
 * Docker & Docker Compose
 
 ---
+## 🔹 Why Node.js + Express + MySQL?
+
+The selected technology stack was chosen based on the following engineering considerations:
+
+- **Scalability:** Node.js uses a non-blocking, event-driven architecture, making it suitable for handling multiple concurrent API requests efficiently.
+
+- **Security:** JWT-based authentication (access and refresh tokens) ensures secure communication and controlled access to protected endpoints.
+
+- **Maintainability:** Express.js provides a simple and modular structure, while Sequelize ORM helps organize database interactions cleanly, making the system easier to maintain and extend.
+
+- **Development Efficiency:** The JavaScript ecosystem offers fast development, extensive libraries, and strong community support, reducing development time and complexity.
+
+- **Database Reliability:** MySQL provides a robust relational database system with strong support for structured data, transactions, and data integrity.
+
+---
 
 ## 🏗️ Architecture
 
