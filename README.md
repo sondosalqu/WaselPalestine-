@@ -165,81 +165,25 @@ All APIs documented using **API-Dog**:
 * Testing scenarios
 
 ---
+## Performance & Load Testing (k6)
 
-## ⚡ Performance & Load Testing (k6)
+Five scenarios were tested to evaluate system behavior under different load conditions.
 
-### Test Scenarios
+| Scenario    | Load       | Duration | Avg       | p95     | Throughput  | Error |
+|-------------|------------|----------|-----------|---------|-------------|-------|
+| Read-heavy  | 20 VUs     | 1 min    | 13.88ms   | 26.43ms | 35.81 req/s | 0%    |
+| Write-heavy | 40 VUs     | 5 min    | 717.93ms  | 1.97s   | 13.91 req/s | 0%    |
+| Mixed       | 50 VUs     | 5 min    | 374.57ms  | 1.15s   | 36.27 req/s | 0%    |
+| Spike       | 10→100 VUs | 3 min    | 15.77ms   | 33.33ms | 52.56 req/s | 0%    |
+| Soak        | 20 VUs     | 15 min   | 17.26ms   | 30.94ms | 9.89 req/s  | 0%    |
 
-| Scenario | Load | Duration |
-|---|---|---|
-| Read-heavy | 20 VUs | 1 min |
-| Write-heavy | 40 VUs | 5 min |
-| Mixed | 50 VUs | 5 min |
-| Spike | 100 VUs | 3 min |
-| Soak | 20 VUs | 15 min |
+**Key findings:**
+- 0% error rate across all scenarios — system is stable under concurrent load
+- Read, spike, and soak scenarios show excellent latency after database indexing optimization
+- Write-heavy workload has higher latency due to synchronous DB inserts
 
----
-
-### Results Summary
-
-| Scenario | Avg | p95 | Throughput | Error |
-|---|---|---|---|---|
-| Read-heavy | 7.41 ms | 14.52 ms | 19.77 req/s | 0% |
-| Mixed | 286 ms | 983 ms | 38.75 req/s | 0% |
-| Write-heavy | 717.93 ms | 1.97 s  | 20.95 req/s | 0% |
-| Spike | 7.62 ms | 17.98 ms | 53 req/s | 0% |
-| Soak | 5.69 ms | 13.81 ms | 9.96 req/s | 0% |
-
----
-
-### Analysis
-
-- Read-heavy, spike, and soak tests demonstrate excellent performance with very low latency and zero error rate.
-
-- The system remains stable under mixed workload conditions, with acceptable response times considering the presence of write operations.
-
-- Write-heavy workload shows significantly higher latency compared to read operations, confirming the expected performance gap between read and write paths.
-
-- Overall, the system maintains reliability (0% error rate) across all scenarios, indicating stable behavior under concurrent load..
-
----
-
-### Root Cause Analysis
-
-- High latency in write-heavy scenarios is primarily caused by database insert operations.
-
-- Each write request involves validation, persistence, and possibly additional processing (such as geolocation handling), which increases response time.
-
-- Unlike read operations, write operations require synchronous interaction with the database, leading to slower performance under concurrent load.
-
----
-
-### Bottlenecks
-
-- Database write operations are more expensive than read operations
-- Synchronous write processing adds latency
-- Duplicate detection and validation add overhead
-- Lack of caching for repeated read/external API data
----
-
-### Improvements
-
-- Add indexing on frequently used columns
-- Optimize duplicate detection queries
-- Introduce caching for read-heavy/external API data
-- Consider asynchronous processing for write-heavy operations
----
-
-### Before / After
-
-After applying optimizations, the system shows significant improvement in read performance:
-
-- Read average response time improved from ~13.88ms to ~7.41ms
-- Read p95 latency improved from ~26.43ms to ~14.52ms
-
-Mixed, spike, and soak scenarios also show noticeable latency improvements.
-
-Write performance remains unchanged in this phase, as no specific optimizations were applied to the write path..
+> Full performance report available in
+>  https://docs.google.com/document/d/1iY2OsLFjdewjN6kNIPM5hlmBZxMidMf9/edit?usp=sharing&ouid=115634196032624123883&rtpof=true&sd=true
 ---
 ## 🧪 Testing Strategy
 
