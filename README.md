@@ -192,23 +192,23 @@ All APIs documented using **API-Dog**:
 
 ### Analysis
 
--Read-heavy, spike, and soak tests demonstrate excellent performance with very low latency and zero error rate.
+- Read-heavy, spike, and soak tests demonstrate excellent performance with very low latency and zero error rate.
 
--The system remains stable under mixed workload conditions, with acceptable response times considering the presence of write operations.
+- The system remains stable under mixed workload conditions, with acceptable response times considering the presence of write operations.
 
--Write-heavy workload shows significantly higher latency compared to read operations, confirming the expected performance gap between read and write paths.
+- Write-heavy workload shows significantly higher latency compared to read operations, confirming the expected performance gap between read and write paths.
 
--Overall, the system maintains reliability (0% error rate) across all scenarios, indicating stable behavior under concurrent load..
+- Overall, the system maintains reliability (0% error rate) across all scenarios, indicating stable behavior under concurrent load..
 
 ---
 
 ### Root Cause Analysis
 
--High latency in write-heavy scenarios is primarily caused by database insert operations.
+- High latency in write-heavy scenarios is primarily caused by database insert operations.
 
--Each write request involves validation, persistence, and possibly additional processing (such as geolocation handling), which increases response time.
+- Each write request involves validation, persistence, and possibly additional processing (such as geolocation handling), which increases response time.
 
--Unlike read operations, write operations require synchronous interaction with the database, leading to slower performance under concurrent load.
+- Unlike read operations, write operations require synchronous interaction with the database, leading to slower performance under concurrent load.
 
 ---
 
