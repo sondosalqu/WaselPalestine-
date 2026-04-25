@@ -23,7 +23,12 @@ router.patch("/reports/:id/close", requireAuth, authorizeRoles(1, 2), closeRepor
 router.patch("/reports/:id/mark-duplicate", requireAuth, authorizeRoles(1, 2), markReportAsDuplicate);
 
 router.get("/reports/pending", requireAuth, authorizeRoles(1, 2), getPendingReports);
-router.get("/reports/:id/moderation-actions", requireAuth, authorizeRoles(1, 2), getModerationActionsByReport);
+router.get(
+  "/reports/:id/moderation-actions",
+  requireAuth,
+  authorizeRoles(1), 
+  getModerationActionsByReport
+);
 
 
 

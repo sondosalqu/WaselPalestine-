@@ -11,8 +11,6 @@ const {
   createReport,
 } = require("../controllers/reportsController");
 
-<<<<<<< HEAD
-
 
 router.get("/", getReports);
 
@@ -21,15 +19,6 @@ router.get("/", getReports);
 router.get("/:id", getReportById);
 
 
-router.post("/", requireAuth, authorizeRoles(1, 2), createReport);
-=======
-router.get("/", getReports);
-
-
-router.get("/:id", getReportById);
-
-
-router.post("/", requireAuth, createReport);
->>>>>>> b94b67e77c7269fcba74cce410ebc31d039180b2
+router.post("/", requireAuth, authorizeRoles(3), createReport);
 
 module.exports = router;

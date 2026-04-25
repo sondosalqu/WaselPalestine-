@@ -11,6 +11,7 @@ const config = require(__dirname + "/../config/config.js")[env];
 
 const db = {};
 
+
 let sequelize;
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
@@ -217,5 +218,26 @@ if (db.AlertSubscription && db.AlertRecord) {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+const syncDatabase = async () => {
+  let retries = 10;
+
+  while (retries) {
+    try {
+      await sequelize.authenticate();
+      console.log("✅ DB connected");
+
+      await sequelize.sync({ alter: true });
+      console.log("✅ Database synced");
+
+      break;
+    } catch (err) {
+      console.log("⏳ DB not ready, retrying...");
+      retries -= 1;
+      await new Promise(res => setTimeout(res, 3000));
+    }
+  }
+};
+
 
 module.exports = db;
+syncDatabase();
