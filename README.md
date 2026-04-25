@@ -184,7 +184,7 @@ All APIs documented using **API-Dog**:
 |---|---|---|---|---|
 | Read-heavy | 7.41 ms | 14.52 ms | 19.77 req/s | 0% |
 | Mixed | 286 ms | 983 ms | 38.75 req/s | 0% |
-| Write-heavy | 137 ms | 99 ms | 20.95 req/s | 93.97% |
+| Write-heavy | 717.93 ms | 1.97 s  | 20.95 req/s | 0% |
 | Spike | 7.62 ms | 17.98 ms | 53 req/s | 0% |
 | Soak | 5.69 ms | 13.81 ms | 9.96 req/s | 0% |
 
@@ -192,46 +192,52 @@ All APIs documented using **API-Dog**:
 
 ### Analysis
 
-Read-heavy, spike, and soak tests show excellent performance with low latency and zero errors.
+-Read-heavy, spike, and soak tests demonstrate excellent performance with very low latency and zero error rate.
 
-Mixed workload remains stable under concurrent operations.
+-The system remains stable under mixed workload conditions, with acceptable response times considering the presence of write operations.
 
-However, write-heavy testing shows a high failure rate.
+-Write-heavy workload shows significantly higher latency compared to read operations, confirming the expected performance gap between read and write paths.
+
+-Overall, the system maintains reliability (0% error rate) across all scenarios, indicating stable behavior under concurrent load..
 
 ---
 
 ### Root Cause Analysis
 
-- Duplicate detection rejects repeated requests
-- k6 uses identical payloads
-- High concurrent insert operations
+-High latency in write-heavy scenarios is primarily caused by database insert operations.
+
+-Each write request involves validation, persistence, and possibly additional processing (such as geolocation handling), which increases response time.
+
+-Unlike read operations, write operations require synchronous interaction with the database, leading to slower performance under concurrent load.
 
 ---
 
 ### Bottlenecks
 
-- Database writes are expensive
-- Duplicate detection adds overhead
-- No unique payload generation in testing
-
+- Database write operations are more expensive than read operations
+- Synchronous write processing adds latency
+- Duplicate detection and validation add overhead
+- Lack of caching for repeated read/external API data
 ---
 
 ### Improvements
 
-- Generate dynamic test data
 - Add indexing on frequently used columns
 - Optimize duplicate detection queries
-- Introduce caching for external APIs
-
+- Introduce caching for read-heavy/external API data
+- Consider asynchronous processing for write-heavy operations
 ---
 
 ### Before / After
 
-Initial testing showed high failure in write-heavy scenarios.
+After applying optimizations, the system shows significant improvement in read performance:
 
-Analysis identified duplicate handling as the main issue.
+- Read average response time improved from ~13.88ms to ~7.41ms
+- Read p95 latency improved from ~26.43ms to ~14.52ms
 
-Future optimizations are expected to reduce error rates significantly.
+Mixed, spike, and soak scenarios also show noticeable latency improvements.
+
+Write performance remains unchanged in this phase, as no specific optimizations were applied to the write path..
 ---
 ## 🧪 Testing Strategy
 
